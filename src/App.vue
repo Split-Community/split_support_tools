@@ -1,28 +1,37 @@
 <template>
   <div id="app">
-    <img alt="Vue logo" src="./assets/logo.png">
-    <HelloWorld msg="Welcome to Your Vue.js App"/>
+    <b-navbar type="dark" variant="info">
+      <b-navbar-brand>Split Definition Copier</b-navbar-brand>
+    </b-navbar>
+    <b-container id="main-container">
+      <b-row>
+        <b-col cols="4">
+          <APIConfig />
+        </b-col>
+        <b-col>
+          <CopierComponent />
+        </b-col>
+      </b-row>
+    </b-container>
   </div>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
+import APIConfig from './components/APIConfig.vue';
+import CopierComponent from './components/CopierComponent.vue';
 
 export default {
   name: 'App',
   components: {
-    HelloWorld
-  }
-}
+    APIConfig,
+    CopierComponent,
+  },
+};
 </script>
 
-<style>
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
+<style scoped>
+#main-container {
+  margin-left: 0;
+  margin-right: 0;
 }
 </style>
