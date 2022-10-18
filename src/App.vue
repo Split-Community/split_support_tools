@@ -3,12 +3,13 @@
     <b-navbar type="dark" variant="info">
       <b-navbar-brand>Split Definition Copier</b-navbar-brand>
     </b-navbar>
-    <b-container id="main-container">
+
+    <b-container id="main-container" fluid>
       <b-row>
         <b-col cols="4">
           <APIConfig />
         </b-col>
-        <b-col>
+        <b-col cols="8">
           <CopierComponent />
         </b-col>
       </b-row>
