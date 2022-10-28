@@ -1,6 +1,6 @@
 <template>
     <b-container>
-      <b-row class="mt-3">
+      <b-row v-if="API_KEY === ''" class="mt-3">
         <b-col>
           <b-form @submit="onSubmitKey">
             <b-form-group id="input-group-1" label="Admin API key:" label-for="input-1">
@@ -20,7 +20,7 @@
           </b-form>
         </b-col>
       </b-row>
-      <b-row class="mt-3">
+      <b-row v-if="API_KEY === ''" class="mt-3">
         <b-col>
           <b-button class="mr-1" variant="danger" @click="resetForms">Reset</b-button>
         </b-col>
@@ -29,7 +29,8 @@
 </template>
 
 <script>
-import { mapMutations, mapActions, mapGetters } from 'vuex'
+import { mapMutations, mapActions, mapGetters } from 'vuex';
+import { API_KEY } from '@/js/consts.js';
 
 export default {
   name: 'APIConfig',
@@ -40,8 +41,15 @@ export default {
       },
       wsForm: {
         workspace: null,
-      }
+      },
+      API_KEY: API_KEY,
     };
+  },
+  async mounted() {
+    console.log('mounted');
+    if (this.API_KEY !== '') {
+      await this.GET_WORKSPACES();
+    }
   },
   methods: {
     async onSubmitKey(event) {
@@ -58,7 +66,9 @@ export default {
     resetForms() {
       this.form.apiKey = null;
       this.wsForm.workspace = null;
-      this.$store.state.apiKey = this.form.apiKey;
+      if (this.API_KEY !== '') {
+        this.$store.state.apiKey = this.form.apiKey;
+      }
       this.$store.state.currentWorkspace = this.wsForm.workspace;
       this.$store.state.workspaces = [];
       this.$store.state.environments = [];

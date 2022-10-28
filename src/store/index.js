@@ -1,13 +1,14 @@
 import Vue from 'vue';
 import Vuex from 'vuex';
 
-import { MAKE_URL } from '@/js/utils';
+import { MAKE_URL } from '@/js/utils.js';
+import { API_KEY } from '@/js/consts.js';
 
 Vue.use(Vuex);
 
 export default new Vuex.Store({
   state: {
-    apiKey: '',
+    apiKey: API_KEY,
     workspaces: [],
     currentWorkspace: null,
     environments: [],
