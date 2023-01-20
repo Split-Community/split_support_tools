@@ -1,5 +1,9 @@
 # split_copier
 
+## Overview
+
+This is a simple tool to copy the Split definitions from one Split to another.
+
 ## Project setup
 ```
 npm install
