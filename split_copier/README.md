@@ -2,7 +2,7 @@
 
 ## Overview
 
-This is a simple tool to copy the Split definitions from one Split to another.
+This is a simple tool to copy the Split definitions from one environment to another.
 
 ## Project setup
 ```
