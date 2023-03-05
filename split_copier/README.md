@@ -4,6 +4,9 @@
 
 This is a simple tool to copy the Split definitions from one environment to another.
 
+# Getting Started
+Please update your nodeJS to at least version v14.21 
+
 ## Project setup
 ```
 npm install
