@@ -30,6 +30,23 @@ def get_workspace_data():
         for ws in client.workspaces.list()
     ]
 
+
+def get_all_environments():
+    """
+    Fetches all environments in all workspaces and returns a list of environment dictionaries.
+    """
+    all_envs = []
+    workspaces = get_workspaces()
+    for ws_id, ws_name in workspaces.items():
+        environments = client.environments.list(ws_id)
+        for env in environments:
+            env_dict = env.to_dict()
+            env_dict['workspaceIds'] = [ws_id]
+            env_dict['Workspace'] = ws_name
+            all_envs.append(env_dict)
+    return all_envs
+
+
 def get_groups():
     return {group._id: group._name for group in client.groups.list()}
 
@@ -49,6 +66,7 @@ def get_segments():
                 "Tags": segment._tags,
             })
     return segments_data
+
 
 def get_all_users():    
     groups_dict = get_groups()
@@ -76,26 +94,29 @@ def get_splits():
     splits = []
     for workspace_id, workspace_name in workspaces.items():
         for split in client.splits.list(workspace_id):
-            split_data = {
-                "workspace": workspace_name,
-                "name": split._name,
-                "description": split.description,
-                "trafficType": {
+            split_data = split.to_dict()
+            split_data["workspace"] = workspace_name
+            split_data["trafficType"] = {
                     "id": split._trafficType._id,
                     "name": split._trafficType.name
-                },
-                "creationTime": split._creationTime,
-                "id": split._id,
-                "rolloutStatus": {
+                }
+            split_data["creationTime"] = split._creationTime
+                
+            split_data["rolloutStatus"] = {
                     "id": split._rolloutStatus['id'],
                     "name": split._rolloutStatus['name']
-                },
-                "rolloutStatusTimestamp": split._rolloutStatusTimestamp,
-                "tags": split._tags,
-                "owners": split._owners
-            }
+                }
+            split_data["rolloutStatusTimestamp"] = split._rolloutStatusTimestamp,
+            split_data["tags"] = split._tags,
+            split_data["owners"] = split._owners
             splits.append(split_data)
     return splits
+
+def get_split_definitions(environment_id, workspace_id):
+    definitions = []
+    for split_def in client.split_definitions.list(environment_id, workspace_id):
+        definitions.append(split_def.to_dict())
+    return definitions
 
 
 def get_groups_users():
@@ -143,8 +164,26 @@ def search_workspaces_or_groups():
                     print(f"The users in this group are:")
                     pprint.pprint(user_list)
 
+def search_environments():
+    while True:
+        env_name = input("Enter the environment name to search or 1 to go back to main Menu: ")
+        if env_name == "1":
+            search()
+            break
+        else:
+            found_envs = []
+            all_envs = get_all_environments()
+            for env in all_envs:
+                if env['name'] == env_name:
+                    found_envs.append(env)
+            if found_envs:
+                print(f"Environment found with name: {env_name}")
+                pprint.pprint(found_envs)
+            else:
+                print(f"Environment not found with name {env_name}")
 
-def search_segment():
+
+def search_segments():
     segment_name = input("Enter the name of the segment: ")
     segments_data = get_segments()
     segment_found = False
@@ -161,7 +200,7 @@ def search_segment():
         print(f"Segment not found with name {segment_name}")
 
 
-def search_user():
+def search_users():
     email = input("Enter the email of the user: ")
     user = client.users.find(email)
     if user:
@@ -192,7 +231,7 @@ def search_splits_by_name(splits_data, split_name):
             return split_data
     return None
 
-def search_split():
+def search_splits():
     splits = get_splits()
     while True:
         split_name = input("Enter the split name to search or 1 to go back to main Menu: ")
@@ -333,11 +372,12 @@ def display_options(options):
 def search():
     options = {
         "1": "search_workspaces_or_groups",
-        "2": "search_user",
-        "3": "search_split",
-        "4": "search_segment",
-        "5": "main_menu",
-        "6": "quit_tool",
+        "2": "search_environments",
+        "3": "search_users",
+        "4": "search_splits",
+        "5": "search_segments",
+        "6": "main_menu",
+        "7": "quit_tool",
     }
     while True:
         display_options(options)
@@ -373,6 +413,8 @@ def export_all_data():
         else:
             print("Invalid choice, try again")
 
+#Method to display the menu
+#New option can be added by adding new key to the options dictionary
 def main_menu():
     options = {
         "1": "search",
