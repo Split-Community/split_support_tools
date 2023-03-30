@@ -47,7 +47,7 @@ This is a simple python tool utilizing the Split's [Python PyPi library for Spli
    - This will search for the name of the workspaces or the groups in your org.
 
 2. Search Environments
-   - This will search for the environments of the same name across all workspaces.
+   - This will search for the environments of the same name across all workspaces. You will also have the option to see all the splits' definitions under this environment.
 
 3. Search Users
    - Requires the email of the users being searched. Will show information of the user and which group they are in.
@@ -66,13 +66,13 @@ This is a simple python tool utilizing the Split's [Python PyPi library for Spli
    - This will export all groups and the users in each group.
 
 2. Export Segments
-   - This will export all segments across all workspaces and environments as well as the corresponding keys.
+   - This will export all segments across all workspaces and environments as well as the corresponding keys. Note that depending on how many segments you have, how many keys in each segment, this can take a few minutes to run.
 
 3. Export Splits
    - This will export all Splits (not the definitions) across all workspaces and environments.
 
 4. Export Split Definitions
-   - This will export all Splits definitions across all workspaces and environments.
+   - This will export all Splits definitions across all workspaces and environments. Note that depending on how many splits you have this can take a few minutes to run.
 
 5. Export Users
    - This will export all ACTIVE users (cannot export inactive users).
