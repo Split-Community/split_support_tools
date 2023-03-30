@@ -4,10 +4,9 @@ This is a simple python tool utilizing the Split's [Python PyPi library for Spli
 
 ## Setup
 
-1. If you don’t have Python installed, [install it from here](https://www.python.org/downloads/)
+1. If you don’t have Python 3 installed, [install it from here](https://www.python.org/downloads/)
 
 2. Clone this repository
-
 
 3. Create a new virtual environment
 
@@ -33,7 +32,7 @@ This is a simple python tool utilizing the Split's [Python PyPi library for Spli
 8. Run the tool
 
    ```bash
-   $ python python_admin_tool.py
+   $ python admin_api_tool.py
    ```
 
 
