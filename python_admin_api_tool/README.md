@@ -38,9 +38,9 @@ This is a simple python tool utilizing the Split's [Python PyPi library for Spli
 
 ## Usage:
 
-- The menu is straight forward with the options. There are 2 choices: Search and Export
+- The menu is straight forward with the options. There are 2 choices: Search and Export.
 
-- The Search options are:
+- The search options are:
 
 ```
 1. Search Workspaces Or Groups
