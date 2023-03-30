@@ -76,7 +76,7 @@ def get_segments():
 
         for env in client.environments.list(ws.id):
             for segDef in client.segment_definitions.list(env.id, ws.id):
-                segments_data["Segment: " + segDef.name + " " + "in" + " " + "Environment: " + env._name] = {
+                segments_data["Segment: " + segDef.name + " in " + "Environment: " + env._name] = {
                     "Segment Name": segDef.name,
                     "Environment": {
                         "ID": env.id,
@@ -356,7 +356,7 @@ def search_splits():
                 print("-------------------------------------------")
                 pprint.pprint(split_data)
             see_split_definitions = input("Do you want to see the split definitions for this split? (yes/no): ")
-            print("This will show all the Split definitions of the same Split name across all workspaces and environments")
+            print("Showing all the Split definitions of the same Split name across all workspaces and environments")
             if see_split_definitions.lower() == "yes" or see_split_definitions.lower() == "y":
                 print(f"This will take sometime, please wait...")
                 split_definitions = get_split_definitions_by_name(split_name)
