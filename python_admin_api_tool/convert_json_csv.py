@@ -13,9 +13,9 @@ def json_to_csv(json_file, csv_file):
             if isinstance(obj, list):
                 for item in obj:
                     if isinstance(item, dict):
-                        keys |= set(item.keys())
+                        keys.update(item.keys())
             elif isinstance(obj, dict):
-                keys |= set(obj.keys())
+                keys.update(obj.keys())
 
         with open(csv_file, "w", newline="") as output_file:
             dict_writer = csv.DictWriter(output_file, fieldnames=keys)
