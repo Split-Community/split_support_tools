@@ -10,6 +10,7 @@ load_dotenv()
 API_KEY = os.environ.get("ADMIN_API_KEY")
 # Initialize the client connection
 
+
 client = get_client({'apikey': API_KEY})
 
 def get_workspaces():
@@ -23,6 +24,7 @@ def get_workspace_data():
         }
         for ws in client.workspaces.list()
     }
+
 
 def get_environments_data():
     all_envs = {}
@@ -281,13 +283,12 @@ def search_environments():
                 print(f"Environment(s) found with name: {env_name}")
                 print(f"Showing all environments of the same name across all workspaces:")
                 for env in found_envs:
-                    print("-------------------------------------------")
+                    print("-------------------")
                     pprint.pprint(env)
 
                 see_split_definitions = input("Do you want to see all the split definitions in this environment? (yes/no): ")
                 if see_split_definitions.lower() == "yes":
                     for env in found_envs:
-                        print("-------------------------------------------")
                         definitions = get_split_definitions(env["ID"], env["Workspace ID"])
                         print(f"Split definitions for environment {env_name} in workspace {env['Workspace Name']}:")
                         pprint.pprint(definitions)
@@ -355,7 +356,7 @@ def search_splits():
                 print("-------------------------------------------")
                 pprint.pprint(split_data)
             see_split_definitions = input("Do you want to see the split definitions for this split? (yes/no): ")
-            print("This will show ")
+            print("This will show all the Split definitions of the same Split name across all workspaces and environments")
             if see_split_definitions.lower() == "yes" or see_split_definitions.lower() == "y":
                 print(f"This will take sometime, please wait...")
                 split_definitions = get_split_definitions_by_name(split_name)
@@ -380,6 +381,7 @@ def export_data(data_type, data_getter, file_name_format=None):
     print("Exporting data, please wait...")
     export_data_to_json(data_type, data_getter, file_name_format)
     print(f"{data_type} data exported successfully!")
+
 
 def export_splits():
     export_data("splits", get_splits, "{0}_splits")
@@ -459,6 +461,8 @@ def export_all_data():
         else:
             print("Invalid choice, try again")
 
+#Method to display the menu
+#New option can be added by adding new key to the options dictionary
 def main_menu():
     options = {
         "1": "search",
