@@ -281,12 +281,13 @@ def search_environments():
                 print(f"Environment(s) found with name: {env_name}")
                 print(f"Showing all environments of the same name across all workspaces:")
                 for env in found_envs:
-                    print("-------------------")
+                    print("-------------------------------------------")
                     pprint.pprint(env)
 
                 see_split_definitions = input("Do you want to see all the split definitions in this environment? (yes/no): ")
                 if see_split_definitions.lower() == "yes":
                     for env in found_envs:
+                        print("-------------------------------------------")
                         definitions = get_split_definitions(env["ID"], env["Workspace ID"])
                         print(f"Split definitions for environment {env_name} in workspace {env['Workspace Name']}:")
                         pprint.pprint(definitions)
