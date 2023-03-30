@@ -1,19 +1,14 @@
 import os
 import json
-import csv
-import readline
 import re
 import pprint
-from collections import OrderedDict
 from dotenv import load_dotenv
-
 from splitapiclient.main import get_client
 
 load_dotenv()
 # Load API key from .env file
 API_KEY = os.environ.get("ADMIN_API_KEY")
 # Initialize the client connection
-
 
 client = get_client({'apikey': API_KEY})
 
@@ -28,7 +23,6 @@ def get_workspace_data():
         }
         for ws in client.workspaces.list()
     }
-
 
 def get_environments_data():
     all_envs = {}
@@ -386,7 +380,6 @@ def export_data(data_type, data_getter, file_name_format=None):
     export_data_to_json(data_type, data_getter, file_name_format)
     print(f"{data_type} data exported successfully!")
 
-
 def export_splits():
     export_data("splits", get_splits, "{0}_splits")
 
@@ -465,8 +458,6 @@ def export_all_data():
         else:
             print("Invalid choice, try again")
 
-#Method to display the menu
-#New option can be added by adding new key to the options dictionary
 def main_menu():
     options = {
         "1": "search",
