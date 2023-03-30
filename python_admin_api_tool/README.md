@@ -86,7 +86,7 @@ This is a simple python tool utilizing the Split's [Python PyPi library for Spli
 
 ```
 
-## Aditional tool
+## additional tool
 You can use the provided `convert_json_csv.py` to convert your json files to csv. Simply run
 
 ```
