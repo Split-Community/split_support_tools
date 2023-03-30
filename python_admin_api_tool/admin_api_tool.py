@@ -297,12 +297,12 @@ def search_environments():
 
 def search_segments():
     segment_name = input("Enter the name of the segment: ")
-    print("Showing segments of the same name across all workspaces. This will take sometime, please wait...")
+    print("Showing segments of the same name across all environments and workspaces. This will take sometime, please wait...")
     segments_data = get_segments()
     found = False
     
     for key, segment in segments_data.items():
-        if segment_name == segment['Name']:
+        if segment_name == segment['Segment Name']:
             found = True
             print("-------------------------------------------")
             pprint.pprint(key)
