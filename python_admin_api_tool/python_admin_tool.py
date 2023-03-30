@@ -21,39 +21,51 @@ def get_workspaces():
     return {ws.id: ws.name for ws in client.workspaces.list()}
 
 def get_workspace_data():
-    return [
-        {
-            "ID": ws.id,
+    return {
+        ws.id: {
             "Name": ws.name,
             "Requires Title And Comments": ws._requiresTitleAndComments,
         }
         for ws in client.workspaces.list()
-    ]
+    }
 
-def get_all_environments():
-    """
-    Fetches all environments in all workspaces and returns a list of environment dictionaries.
-    """
-    all_envs = []
+
+def get_environments_data():
+    all_envs = {}
     workspaces = get_workspaces()
     for ws_id, ws_name in workspaces.items():
         environments = client.environments.list(ws_id)
+        envs_for_ws = {}
         for env in environments:
             env_dict = {
                 'Workspace ID': ws_id,
                 'Workspace Name': ws_name,
                 'Creation Time': env._creationTime,
                 'Production': env._production,
-                'Data Export Permissions': env._dataExportPermissions,
-                'Environment Type': env._type,  # Replace with the correct value
+                'Data Export Permissions': {},
+                'Environment Type': env._type,
                 'Name': env._name,
-                'Change Permissions': env._changePermissions,
-                'Type': 'environment',
+                'Change Permissions': {},
                 'ID': env._id,
-                'Org ID': env._orgId,
-                'Status': env._status,
+                'Org Id': env._orgId,
+                'status': env._status
             }
-            all_envs.append(env_dict)
+            if env._dataExportPermissions:
+                env_dict['Data Export Permissions'] = {
+                    'areExportersRestricted': env._dataExportPermissions.get('areExportersRestricted'),
+                    'exporters': env._dataExportPermissions.get('exporters', [])
+                }
+            if env._changePermissions:
+                env_dict['Change Permissions'] = {
+                    'areApproversRestricted': env._changePermissions.get('areApproversRestricted'),
+                    'allowKills': env._changePermissions.get('allowKills'),
+                    'areEditorsRestricted': env._changePermissions.get('areEditorsRestricted'),
+                    'areApprovalsRequired': env._changePermissions.get('areApprovalsRequired'),
+                    'approvers': env._changePermissions.get('approvers', []),
+                    'editors': env._changePermissions.get('editors', [])
+                }
+            envs_for_ws[env._name] = env_dict
+        all_envs["Workspace: " + ws_name] = envs_for_ws
     return all_envs
 
 
@@ -68,19 +80,23 @@ def get_segments():
 
         for env in client.environments.list(ws.id):
             for segDef in client.segment_definitions.list(env.id, ws.id):
-                keys = segDef.get_keys()
-                segments_data[segDef._name] = {
-                    "Name": segDef._name,
+                segments_data["Segment: " + segDef.name + " " + "in" + " " + "Environment: " + env._name] = {
+                    "Segment Name": segDef.name,
                     "Environment": {
-                        "id": env.id,
-                        "name": env._name
+                        "ID": env.id,
+                        "Name": env._name
+                    },
+                    "Workspace" :
+                    {
+                        "ID" : ws.id,
+                        "Name" : workspace_name
                     },
                     "Traffic Type": {
-                        "id": segDef._trafficType._id,
-                        "name": segDef._trafficType._name
+                        "ID": segDef._trafficType._id,
+                        "Name": segDef._trafficType._name
                     },
                     "Creation Time": segDef._creationTime,
-                    "Keys": keys
+                    "Keys": client.segment_definitions.find(segDef.name, env.id, ws.id).get_keys()
                 }
 
     return segments_data
@@ -88,11 +104,12 @@ def get_segments():
 def get_groups():
     return {group._id: group._name for group in client.groups.list()}
 
-def get_all_users():    
+def get_all_users():
     groups_dict = get_groups()
-    return [
-        {
-            "ID": user.id,
+    users = {}
+
+    for user in client.users.list("ACTIVE"):
+        user_data = {
             "Type": user._type,
             "Name": user._name,
             "Email": user.email,
@@ -100,22 +117,23 @@ def get_all_users():
             "Groups": [
                 {
                     "type": group["type"],
-                    "id": group["id"],
-                    "name": groups_dict[group["id"]]
+                    "ID": group["id"],
+                    "Name": groups_dict[group["id"]]
                 }
                 for group in user._groups
             ]
         }
-        for user in client.users.list("ACTIVE")
-    ]
+        users[user._name] = user_data  # Use user's ID as the key
+    return users
 
 def get_splits():
     workspaces = get_workspaces()
-    splits = []
+    splits = {}
     for workspace_id, workspace_name in workspaces.items():
         for split in client.splits.list(workspace_id):
             split_data = {
-                "Workspace": workspace_name,
+                "Workspace Name": workspace_name,
+                "Workspace ID": workspace_id,
                 "ID": split.id,
                 "Name": split.name,
                 "Description": split.description,
@@ -128,49 +146,86 @@ def get_splits():
                 "Tags": split._tags,
                 "Owners": split._owners,
             }
-            splits.append(split_data)
+            if split.name not in splits:
+                splits[split.name] = [split_data]
+            else:
+                splits[split.name].append(split_data)
     return splits
+
+def get_split_definition(environment_id, workspace_id, split_def):
+    workspaces = get_workspaces()
+    return {
+        "Workspace Name" :workspaces[workspace_id],
+        "Name": split_def.name,
+        "environment": {
+            "ID" : split_def._environment.id,
+            "Name" : split_def._environment.name
+        },
+        "trafficType": {
+            "ID": split_def._trafficType.id,
+            "Name": split_def._trafficType.name
+        },
+        "killed": split_def._killed,
+        "treatments": [{"Name": t._name, "configurations": t._configurations,
+                        "description": t._description, 
+                        "keys": t._keys, "segments": t._segments} 
+                        for t in split_def._treatments],
+        "defaultTreatment": split_def._default_treatment,
+        "baselineTreatment": split_def._baseline_treatment,
+        "trafficAllocation": split_def._traffic_allocation,
+        "rules": [{
+            "condition": {
+                "combiner": rule._condition["combiner"],
+                "matchers": [{
+                    "negate": matcher.get('negate', False),
+                    "type": matcher.get('type', False),
+                    "attribute": matcher.get('attribute', False),
+                    "string": matcher.get('string', False),
+                    "bool": matcher.get('bool', False),
+                    "strings": matcher.get('strings', False),
+                    "number": matcher.get('number', False),
+                    "date": matcher.get('date', False),
+                    "between": matcher.get('between', False),
+                    "depends": matcher.get('depends', False),
+                } for matcher in rule._condition["matchers"]]
+            },
+            "buckets": [{
+                "treatment": bucket.get('treatment', False),
+                "size": bucket.get('size', False)
+            } for bucket in rule._buckets]
+        } for rule in split_def._rules],
+        "defaultRule": [{
+            "treatment": default_rule._treatment,
+            "size": default_rule._size
+        } for default_rule in split_def._default_rule],
+        "creationTime": split_def._creationTime,
+        "lastUpdateTime": split_def._lastUpdateTime
+    }
 
 
 def get_split_definitions(environment_id, workspace_id):
-    definitions = []
-    workspace_name = get_workspaces()[workspace_id]
-    environment_name = get_environments()[environment_id]
-
+    definitions = {}
     for split_def in client.split_definitions.list(environment_id, workspace_id):
-        definition_data = split_def.to_dict()
-        definition_data["Environment"] = {
-            "ID": environment_id,
-            "Name": environment_name
-        }
-        definition_data["Workspace"] = {
-            "ID": workspace_id,
-            "Name": workspace_name
-        }
-        definitions.append(definition_data)
+        split_name = split_def.name
+        if split_name not in definitions:
+            definitions[split_name] = [get_split_definition(environment_id, workspace_id, split_def)]
+        else:
+            definitions[split_name].append(get_split_definition(environment_id, workspace_id, split_def))
     return definitions
-
 
 def get_all_splits_definitions():
     workspaces = get_workspaces()
     environments = get_environments()
-    definitions = []
-
+    definitions = {}
     for workspace_id, workspace_name in workspaces.items():
         for environment_id, environment_name in environments.items():
-            for split_def in client.split_definitions.list(environment_id, workspace_id):
-                definition_data = split_def.to_dict()
-                definition_data["Environment"] = {
-                    "ID": environment_id,
-                    "Name": environment_name
-                }
-                definition_data["Workspace"] = {
-                    "ID": workspace_id,
-                    "Name": workspace_name
-                }
-                definitions.append(definition_data)
+            workspace_definitions = get_split_definitions(environment_id, workspace_id)
+            for split_name, split_definitions in workspace_definitions.items():
+                if split_name not in definitions:
+                    definitions[split_name] = split_definitions
+                else:
+                    definitions[split_name].extend(split_definitions)
     return definitions
-
 
 def get_groups_users():
     status = "ACTIVE"
@@ -183,8 +238,9 @@ def get_groups_users():
                 users_data[groups_dict[group["id"]]].append(user._name)
             else:
                 users_data[groups_dict[group["id"]]] = [user._name]
-    groups_data = [OrderedDict([("Group", group), ("Users", users)]) for group, users in users_data.items()]
+    groups_data = {group: {"Group": group, "Users": users} for group, users in users_data.items()}
     return groups_data
+
 
 def quit_tool():
     print("Goodbye!")
@@ -201,18 +257,15 @@ def search_workspaces_or_groups():
         else:
             ws = client.workspaces.find(ws_or_gr_name)
             if ws:
-                print(f"The workspace id is {ws.id} and name is {ws.name}")
+                print(f"The workspace is found:")
+                pprint.pprint(ws.to_dict())
             else:
                 gr = client.groups.find(ws_or_gr_name)
                 if not gr:
                     print(f"The workspace or group you entered does not exist. Please double check the name and try again")
                 else:
                     groups_data = get_groups_users()
-                    user_list = []
-                    for group in groups_data:
-                        if group['Group'] == ws_or_gr_name:
-                            user_list = group['Users']
-
+                    user_list = groups_data.get(ws_or_gr_name, {}).get('Users', [])
                     print(f"The group id is {gr._id} and name is {gr._name}")
                     print(f"The users in this group are:")
                     pprint.pprint(user_list)
@@ -225,13 +278,17 @@ def search_environments():
             break
         else:
             found_envs = []
-            all_envs = get_all_environments()
-            for env in all_envs:
-                if env['Name'] == env_name:
-                    found_envs.append(env)
+            all_envs = get_environments_data()
+            for ws_id, ws_envs in all_envs.items():
+                for ename, env in ws_envs.items():
+                    if ename == env_name:
+                        found_envs.append(env)
             if found_envs:
-                print(f"Environment found with name: {env_name}")
-                pprint.pprint(found_envs)
+                print(f"Environment(s) found with name: {env_name}")
+                print(f"Showing all environments of the same name across all workspaces:")
+                for env in found_envs:
+                    print("-------------------")
+                    pprint.pprint(env)
 
                 see_split_definitions = input("Do you want to see all the split definitions in this environment? (yes/no): ")
                 if see_split_definitions.lower() == "yes":
@@ -242,21 +299,22 @@ def search_environments():
             else:
                 print(f"Environment not found with name {env_name}")
 
-
 def search_segments():
     segment_name = input("Enter the name of the segment: ")
+    print("Showing segments of the same name across all workspaces. This will take sometime, please wait...")
     segments_data = get_segments()
+    found = False
+    
+    for key, segment in segments_data.items():
+        if segment_name == segment['Name']:
+            found = True
+            print("-------------------------------------------")
+            pprint.pprint(key)
+            print("-------------------------------------------")
+            print("Segment definition : ")
+            pprint.pprint(segment)
 
-    if segment_name in segments_data:
-        segment = segments_data[segment_name]
-        print(f"Segment found with name: {segment_name}")
-        print(f"Environment ID: {segment['Environment']['id']}")
-        print(f"Environment Name: {segment['Environment']['name']}")
-        print(f"Traffic Type ID: {segment['Traffic Type']['id']}")
-        print(f"Traffic Type Name: {segment['Traffic Type']['name']}")
-        print(f"Creation Time: {segment['Creation Time']}")
-        print(f"Keys: {', '.join(segment['Keys'])}")
-    else:
+    if not found:
         print(f"Segment not found with name {segment_name}")
 
 def search_users():
@@ -280,15 +338,14 @@ def search_users():
         print(f"User not found with email {email}")
 
 
-def search_splits_by_name(splits_data, split_name):
-    for split in splits_data:
-        if split['Name'] == split_name:
-            split_data = {
-                "workspace": split['Workspace'],
-                "split_data": split
-            }
-            return split_data
-    return None
+def get_split_definitions_by_name(split_name):
+    all_definitions = get_all_splits_definitions()
+    definitions = {split_name: []}
+
+    if split_name in all_definitions:
+        definitions[split_name] = all_definitions[split_name]
+
+    return definitions
 
 def search_splits():
     splits = get_splits()
@@ -297,94 +354,59 @@ def search_splits():
         if split_name == "1":
             search()
             break
-        split_data = search_splits_by_name(splits, split_name)
-        if split_data:
-            print("Split found:")
-            pprint.pprint(split_data)
+        elif split_name in splits:
+            print("Splits found:")
+            for split_data in splits[split_name]:
+                print("-------------------------------------------")
+                pprint.pprint(split_data)
+            see_split_definitions = input("Do you want to see the split definitions for this split? (yes/no): ")
+            print("This will show ")
+            if see_split_definitions.lower() == "yes" or see_split_definitions.lower() == "y":
+                print(f"This will take sometime, please wait...")
+                split_definitions = get_split_definitions_by_name(split_name)
+                for definition_data in split_definitions[split_name]:
+                    print("-------------------------------------------")
+                    environment_name = definition_data["environment"]["Name"]
+                    workspace_name = definition_data["Workspace Name"]
+                    print(f"Split definition for Split {split_name} in environment {environment_name} and workspace {workspace_name}:")
+                    pprint.pprint(definition_data)
         else:
             print("Split not found")
-
 #-------------------------------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------------------------------
 
 def export_data_to_json(data_type, data_getter, file_name_format):
     data = data_getter()
-    with open(f"{data_type}.json", "w") as file:
+    with open(data_type + "_data" + ".json", "w") as file:
         file.write(json.dumps(data, indent=4))
 
-def export_data_to_csv(data_type, data_getter, file_extension, file_name_format):
-    data = data_getter()
-    if type(data) == dict:
-        for name, d in data.items():
-            with open(name + ".csv", "w", newline="") as f:
-                writer = csv.DictWriter(f, fieldnames=file_extension)
-                writer.writeheader()
-                if type(d) == dict:
-                    if "objects" in d:
-                        for item in d["objects"]:
-                            writer.writerow(item)
-                    else:
-                        writer.writerow(d)
-                else:
-                    for item in d:
-                        writer.writerow(item)
-    elif type(data) == list:
-        with open(data_type + ".csv", "w", newline="") as f:
-            writer = csv.DictWriter(f, fieldnames=file_extension)
-            writer.writeheader()
-            for item in data:
-                writer.writerow(item)
-    else:
-        raise ValueError("Data type not supported")
-
-def export_data(data_type, data_getter, file_extension=None, file_name_format=None):
-    options = {
-        "json": export_data_to_json,
-        "csv": export_data_to_csv
-    }
-    choice = input("Enter the format you want the output in (json/csv): ")
-    if choice not in options:
-        print("Invalid choice")
-        return
-    if choice == "csv":
-        options[choice](data_type, data_getter, file_extension, file_name_format)
-    else:
-        options[choice](data_type, data_getter, file_name_format)
+def export_data(data_type, data_getter, file_name_format=None):
+    print("Exporting data, please wait...")
+    export_data_to_json(data_type, data_getter, file_name_format)
     print(f"{data_type} data exported successfully!")
 
 
 def export_splits():
-    split_data = get_splits()
-    export_data("splits", split_data, ["Workspace", "ID", "Name", "Description", "Traffic Type ID", "Traffic Type Name", "Creation Time", "Rollout Status ID", "Rollout Status Name", "Rollout Status Timestamp", "Tags", "Owners"], "{0}_splits")
+    export_data("splits", get_splits, "{0}_splits")
 
 def export_users():
-    users = get_all_users()
-    export_data("users", users, ["ID", "Type", "Name", "Email", "Status", "Groups"], "users",)
+    export_data("users", get_all_users, "{0}_users")
 
 def export_workspaces():
-    workspace_data = get_workspace_data()
-    export_data("workspaces", workspace_data, ["ID", "Name", "Requires Title And Comments"], "{0}_workspaces")
+    export_data("workspaces", get_workspace_data, "{0}_workspaces")
 
 def export_segments():
-    export_data("segments", get_segments, ["Name", "Environment ID", "Environment Name", "Traffic Type ID", "Traffic Type Name", "Creation Time", "Keys"], "{0}_segments")
+    export_data("segments", get_segments, "{0}_segments")
 
 def export_groups():
-    export_data("groups", get_groups_users, ["Group", "Users"], "{0}_groups")
+    export_data("groups", get_groups_users, "{0}_groups")
 
 def export_environments():
-    export_data("environments", get_all_environments, [
-        "Workspace ID", "Workspace Name", "Creation Time", "Production",
-        "Data Export Permissions", "Environment Type", "Name", "Change Permissions",
-        "Type", "ID", "Org ID", "Status"
-    ], "environments")
+    export_data("environments", get_environments_data, "{0}_environments")
 
 def export_split_definitions():
-    export_data("split_definitions", get_all_splits_definitions, [
-        "Split Name", "Environment ID", "Environment Name", "creationTime", "killed", "name", "defaultTreatment", "lastTrafficReceivedAt", "rules", "defaultRule", "trafficType", "treatments", "trafficAllocation", "Environment", "Workspace", "lastUpdateTime", "environment", "baselineTreatment"
-    ], "{0}_split_definitions")
-
-
+    export_data("split_definitions", get_all_splits_definitions, "{0}_split_definitions")
 
 def format_text(text):
     text = re.sub('_', ' ', text)
