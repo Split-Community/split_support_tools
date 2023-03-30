@@ -92,5 +92,5 @@ You can use the provided `convert_json_csv.py` to convert your json files to csv
 python convert_json_csv.py
 ```
 
-In the same directoy of your json files.
+In the same directory of your json files.
 
