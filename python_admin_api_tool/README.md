@@ -47,7 +47,7 @@ This is a simple python tool utilizing the Split's [Python PyPi library for Spli
    - This will search for the name of the workspaces or the groups in your org.
 
 2. Search Environments
-   - This will search for the environments of the same name across all workspaces. You will also have the option to see all the splits' definitions under this environment.
+   - This will search for all the environments of the same name across all workspaces. You will also have the option to see all the splits' definitions under this environment's name.
 
 3. Search Users
    - Requires the email of the users being searched. Will show information of the user and which group they are in.
