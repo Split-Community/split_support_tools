@@ -4,14 +4,18 @@ import re
 import pprint
 from dotenv import load_dotenv
 from splitapiclient.main import get_client
+from splitapiclient.util.exceptions import HTTPNotFoundError
 
 load_dotenv()
 # Load API key from .env file
 API_KEY = os.environ.get("ADMIN_API_KEY")
 # Initialize the client connection
 
-
 client = get_client({'apikey': API_KEY})
+
+def quit_tool():
+    print("Goodbye!")
+    exit()
 
 def get_workspaces():
     return {ws.id: ws.name for ws in client.workspaces.list()}
@@ -24,7 +28,6 @@ def get_workspace_data():
         }
         for ws in client.workspaces.list()
     }
-
 
 def get_environments_data():
     all_envs = {}
@@ -63,7 +66,6 @@ def get_environments_data():
             envs_for_ws[env._name] = env_dict
         all_envs["Workspace: " + ws_name] = envs_for_ws
     return all_envs
-
 
 def get_environments():
     return {env.id: env.name for ws_id, _ in get_workspaces().items() for env in client.environments.list(ws_id)}
@@ -119,7 +121,7 @@ def get_all_users():
                 for group in user._groups
             ]
         }
-        users[user._name] = user_data  # Use user's ID as the key
+        users[user._name] = user_data
     return users
 
 def get_splits():
@@ -198,7 +200,6 @@ def get_split_definition(environment_id, workspace_id, split_def):
         "lastUpdateTime": split_def._lastUpdateTime
     }
 
-
 def get_split_definitions(environment_id, workspace_id):
     definitions = {}
     for split_def in client.split_definitions.list(environment_id, workspace_id):
@@ -237,16 +238,12 @@ def get_groups_users():
     groups_data = {group: {"Group": group, "Users": users} for group, users in users_data.items()}
     return groups_data
 
-
-def quit_tool():
-    print("Goodbye!")
-    exit()
 #-------------------------------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------------------------------
 def search_workspaces_or_groups():
     while True:
-        ws_or_gr_name = input("Enter the workspace or group name to search or 1 to go back to main Menu: ")
+        ws_or_gr_name = input("Enter the workspace or group name to search or 1 to go back to previous menu: ")
         if ws_or_gr_name == "1":
             search()
             break
@@ -268,7 +265,7 @@ def search_workspaces_or_groups():
 
 def search_environments():
     while True:
-        env_name = input("Enter the environment name to search or 1 to go back to main Menu: ")
+        env_name = input("Enter the environment name to search or 1 to go back to previous menu: ")
         if env_name == "1":
             search()
             break
@@ -314,24 +311,29 @@ def search_segments():
         print(f"Segment not found with name {segment_name}")
 
 def search_users():
-    email = input("Enter the email of the user: ")
-    user = client.users.find(email)
-    if user:
-        print(f"User found with email {email}")
-        print(f"ID: {user.id}")
-        print(f"Name: {user._name}")
-        print(f"Email: {user.email}")
-        print(f"Status: {user._status}")
-        print(f"Type: {user._type}")
-        groupnames = []
-        user_groups = get_groups()
-        for group in user._groups:
-            if group["id"] in user_groups:
-                groupnames.append(user_groups[group["id"]])
-        print(f"The user {user._name} is in groups:")
-        pprint.pprint(groupnames)
-    else:
-        print(f"User not found with email {email}")
+    while True:
+        email = input("Enter the email of the user or 1 to go back to previous menu: ")
+        if email == "1":
+            search()
+            break
+        else:
+            user = client.users.find(email)
+            if user:
+                print(f"User found with email {email}")
+                print(f"ID: {user.id}")
+                print(f"Name: {user._name}")
+                print(f"Email: {user.email}")
+                print(f"Status: {user._status}")
+                print(f"Type: {user._type}")
+                groupnames = []
+                user_groups = get_groups()
+                for group in user._groups:
+                    if group["id"] in user_groups:
+                        groupnames.append(user_groups[group["id"]])
+                print(f"The user {user._name} is in groups:")
+                pprint.pprint(groupnames)
+            else:
+                print(f"User not found with email {email}")
 
 
 def get_split_definitions_by_name(split_name):
@@ -346,7 +348,7 @@ def get_split_definitions_by_name(split_name):
 def search_splits():
     splits = get_splits()
     while True:
-        split_name = input("Enter the split name to search or 1 to go back to main Menu: ")
+        split_name = input("Enter the split name to search or 1 to go back to previous menu: ")
         if split_name == "1":
             search()
             break
@@ -382,7 +384,6 @@ def export_data(data_type, data_getter, file_name_format=None):
     export_data_to_json(data_type, data_getter, file_name_format)
     print(f"{data_type} data exported successfully!")
 
-
 def export_splits():
     export_data("splits", get_splits, "{0}_splits")
 
@@ -403,6 +404,41 @@ def export_environments():
 
 def export_split_definitions():
     export_data("split_definitions", get_all_splits_definitions, "{0}_split_definitions")
+
+#-------------------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------------------------------
+def delete_splits():
+    while True:
+        workspace_name = input("Enter the workspace name or 1 to go back to prevous menu: ")
+        if workspace_name == "1":
+            operations()
+            break
+        ws = client.workspaces.find(workspace_name)
+        if ws:
+            while True:
+                split_name = input("Enter the Split name to delete or 1 to go back to previous menu: ")
+                if split_name == "1":
+                    break
+                else:
+                    confirm = input(f"Are you sure you want to delete the split '{split_name}' in workspace '{workspace_name}'? (yes/no): ")
+                    if confirm.lower() == "yes":
+                        try:
+                            deleted = ws.delete_split(split_name)
+                            if deleted:
+                                print(f"The split '{split_name}' has been deleted from workspace '{workspace_name}'")
+                            else:
+                                print(f"Failed to delete the split '{split_name}' from workspace '{workspace_name}'")
+                        except HTTPNotFoundError:
+                            print(f"The split '{split_name}' was not found in workspace '{workspace_name}'")
+                    else:
+                        print("Deletion cancelled")
+        else:
+            print("Workspace not found")
+
+#-------------------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------------------------------
 
 def format_text(text):
     text = re.sub('_', ' ', text)
@@ -461,13 +497,31 @@ def export_all_data():
         else:
             print("Invalid choice, try again")
 
-#Method to display the menu
-#New option can be added by adding new key to the options dictionary
+def operations():
+    options = {
+        "1": "delete_splits",
+        "2": "main_menu",
+        "3": "quit_tool"
+    }
+
+    while True:
+        display_options(options)
+        choice = input(f"Enter your choice (1-{len(options)}): ")
+        if choice in options:
+            globals()[options[choice]]()
+        elif choice == str(len(options)+1):
+            return
+        elif choice == str(len(options)+2):
+            quit_tool()
+        else:
+            print("Invalid choice, try again")
+
 def main_menu():
     options = {
         "1": "search",
         "2": "export_all_data",
-        "3": "quit_tool"
+        "3": "operations",
+        "4": "quit_tool"
     }
 
     while True:

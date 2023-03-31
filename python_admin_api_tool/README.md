@@ -38,9 +38,9 @@ This is a simple python tool utilizing the Split's [Python PyPi library for Spli
 
 ## Usage:
 
-- The menu is straight forward with the options. There are 2 choices: Search and Export.
+- The menu is straight forward with the options. There are 3 choices: Search, Export, and Operations.
 
-- The search options are:
+- The Search options are:
 
 ```
 1. Search Workspaces Or Groups
@@ -59,7 +59,7 @@ This is a simple python tool utilizing the Split's [Python PyPi library for Spli
    - This will search for all segments of the same name across all workspaces and environments, and will also display all the keys of the segments.
 
 ```
-- Similarly, the export options are straightforward. By default, all exports are json format. Please also see Additional tool for info.
+- Similarly, the Export options are straightforward. By default, all exports are json format. Please also see Additional tool for info.
 
 ```
 1. Export Groups
@@ -83,6 +83,13 @@ This is a simple python tool utilizing the Split's [Python PyPi library for Spli
 7. Export Environments
    - This will export all environments across all workspaces.
 
+```
+
+- The Operations are options that will mutate or change your splits/workspaces/environments. More options will be added over time
+
+```
+1. Delete Splits
+   - This will forcefully delete the Split in the workspace you specified, regardless of the definitions. Note that this is not reversable!
 ```
 
 ## Additional tool
