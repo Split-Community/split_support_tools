@@ -444,93 +444,70 @@ def format_text(text):
     text = re.sub('_', ' ', text)
     return text.title()
 
-def display_options(options):
+def display_options(options, menu_name):
+    formatted_options = [
+        f"{key}. {format_text(func.__name__)}"
+        for key, func in options.items()
+    ]
     print("----------------------------------------")
-    print("PYTHON ADMIN API TOOL")
+    print(f"PYTHON ADMIN API TOOL - {menu_name}")
     print("----------------------------------------")
-    for key, value in options.items():
-        print(f"{key}. {format_text(value)}")
+    print("\n".join(formatted_options))
+
+def get_choice(options, menu_name):
+    while True:
+        display_options(options, menu_name)
+        choice = input(f"Enter your choice (1-{len(options)}): ")
+        try:
+            options[choice]()
+        except (KeyError, ValueError, IndexError):
+            print("Invalid choice, try again")
+        except KeyboardInterrupt:
+            print("\nExiting...")
+            quit_tool()
 
 def search():
     options = {
-        "1": "search_workspaces_or_groups",
-        "2": "search_environments",
-        "3": "search_users",
-        "4": "search_splits",
-        "5": "search_segments",
-        "6": "main_menu",
-        "7": "quit_tool",
+        "1": search_workspaces_or_groups,
+        "2": search_environments,
+        "3": search_users,
+        "4": search_splits,
+        "5": search_segments,
+        "6": main_menu,
+        "7": quit_tool,
     }
-    while True:
-        display_options(options)
-        choice = input(f"Enter your choice (1-{len(options)}): ")
-        if choice in options:
-            globals()[options[choice]]()
-        elif choice == str(len(options)+1):
-            return
-        elif choice == str(len(options)+2):
-            quit_tool()
-        else:
-            print("Invalid choice, try again")
+    get_choice(options, "Search")
 
 def export_all_data():
     options = {
-        "1": "export_groups",
-        "2": "export_segments",
-        "3": "export_splits",
-        "4": "export_split_definitions",
-        "5": "export_users",
-        "6": "export_workspaces",
-        "7": "export_environments",
-        "8": "main_menu",
-        "9": "quit_tool"
+        "1": export_groups,
+        "2": export_segments,
+        "3": export_splits,
+        "4": export_split_definitions,
+        "5": export_users,
+        "6": export_workspaces,
+        "7": export_environments,
+        "8": main_menu,
+        "9": quit_tool
     }
-    while True:
-        display_options(options)
-        choice = input(f"Enter your choice (1-{len(options)}): ")
-        if choice in options:
-            globals()[options[choice]]()
-        elif choice == str(len(options)+1):
-            return
-        elif choice == str(len(options)+2):
-            quit_tool()
-        else:
-            print("Invalid choice, try again")
+    get_choice(options, "Export")
 
 def operations():
     options = {
-        "1": "delete_splits",
-        "2": "main_menu",
-        "3": "quit_tool"
+        "1": delete_splits,
+        "2": main_menu,
+        "3": quit_tool
     }
-
-    while True:
-        display_options(options)
-        choice = input(f"Enter your choice (1-{len(options)}): ")
-        if choice in options:
-            globals()[options[choice]]()
-        elif choice == str(len(options)+1):
-            return
-        elif choice == str(len(options)+2):
-            quit_tool()
-        else:
-            print("Invalid choice, try again")
+    get_choice(options, "Eperations")
 
 def main_menu():
     options = {
-        "1": "search",
-        "2": "export_all_data",
-        "3": "operations",
-        "4": "quit_tool"
+        "1": search,
+        "2": export_all_data,
+        "3": operations,
+        "4": quit_tool
     }
-
-    while True:
-        display_options(options)
-        choice = input(f"Enter your choice (1-{len(options)}): ")
-        if choice in options:
-            globals()[options[choice]]()
-        else:
-            print("Invalid choice, try again")
+    get_choice(options, "Main")
 
 if __name__ == '__main__':
     main_menu()
