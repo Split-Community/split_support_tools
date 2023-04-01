@@ -18,9 +18,24 @@ def quit_tool():
     exit()
 
 def get_workspaces():
+    """
+    Retrieve a dictionary of workspaces, where the keys are the workspace IDs
+    and the values are the workspace names.
+
+    Returns:
+        dict: A dictionary of workspace IDs and names.
+    """
     return {ws.id: ws.name for ws in client.workspaces.list()}
 
 def get_workspace_data():
+    """
+    Retrieve a dictionary of workspace data, where the keys are the workspace IDs
+    and the values are dictionaries containing workspace information such as
+    name and whether title and comments are required.
+
+    Returns:
+        dict: A dictionary of workspace data.
+    """
     return {
         ws.id: {
             "Name": ws.name,
@@ -30,6 +45,12 @@ def get_workspace_data():
     }
 
 def get_environments_data():
+    """Returns a dictionary containing information about all environments across all workspaces.
+
+    Returns:
+    dict: A dictionary with keys as workspace names and values as dictionaries containing information 7
+    about all environments of the respective workspace.
+    """
     all_envs = {}
     workspaces = get_workspaces()
     for ws_id, ws_name in workspaces.items():
@@ -68,9 +89,18 @@ def get_environments_data():
     return all_envs
 
 def get_environments():
+    """
+    Returns a dictionary of all environment IDs and names across all workspaces.
+    """
     return {env.id: env.name for ws_id, _ in get_workspaces().items() for env in client.environments.list(ws_id)}
 
 def get_segments():
+    """
+    Get data for all segments in all environments across all workspaces.
+
+    Returns:
+        A dictionary containing information on all segments, grouped by segment name and environment.
+    """
     segments_data = {}
 
     for workspace_id, workspace_name in get_workspaces().items():
@@ -100,9 +130,23 @@ def get_segments():
     return segments_data
 
 def get_groups():
+    """
+    Get all user groups.
+
+    Returns:
+        dict: A dictionary where the keys are the group IDs and the values are the group names.
+    """
     return {group._id: group._name for group in client.groups.list()}
 
 def get_all_users():
+    """
+    Retrieves all active Split users and their associated group memberships.
+
+    Returns:
+        A dictionary where the keys are the user names and the values are dictionaries containing user information,
+        including name, email, status, and a list of groups to which the user belongs.
+
+    """
     groups_dict = get_groups()
     users = {}
 
@@ -125,6 +169,12 @@ def get_all_users():
     return users
 
 def get_splits():
+    """
+    Get data for all splits across all workspaces.
+
+    Returns:
+        A dictionary containing information on all splits, grouped by split name.
+    """
     workspaces = get_workspaces()
     splits = {}
     for workspace_id, workspace_name in workspaces.items():
@@ -151,6 +201,19 @@ def get_splits():
     return splits
 
 def get_split_definition(environment_id, workspace_id, split_def):
+    """
+    Return a dictionary containing detailed information about a split definition.
+
+    Args:
+        environment_id (str): The ID of the environment.
+        workspace_id (str): The ID of the workspace.
+        split_def: The split definition object.
+
+    Returns:
+        A dictionary containing detailed information about the split definition, including its name,
+        environment, traffic type, treatments, rules, default rules, and other metadata.
+
+    """
     workspaces = get_workspaces()
     return {
         "Workspace Name" :workspaces[workspace_id],
@@ -201,6 +264,18 @@ def get_split_definition(environment_id, workspace_id, split_def):
     }
 
 def get_split_definitions(environment_id, workspace_id):
+    """
+    Get data for all Split definitions in a specific environment and workspace.
+
+    Args:
+        environment_id (str): ID of the environment to retrieve Split definitions from.
+        workspace_id (str): ID of the workspace to retrieve Split definitions from.
+
+    Returns:
+        A dictionary containing information on all Split definitions, grouped by Split definition name.
+        Each Split definition contains data on the definition's treatments, rules, and other attributes.
+
+    """
     definitions = {}
     for split_def in client.split_definitions.list(environment_id, workspace_id):
         split_name = split_def.name
@@ -211,6 +286,12 @@ def get_split_definitions(environment_id, workspace_id):
     return definitions
 
 def get_all_splits_definitions():
+    """
+    Get all Split definitions across all workspaces and environments.
+
+    Returns:
+        A dictionary containing information on all Split definitions, grouped by Split name.
+    """
     workspaces = get_workspaces()
     environments = get_environments()
     definitions = {}
@@ -225,6 +306,13 @@ def get_all_splits_definitions():
     return definitions
 
 def get_groups_users():
+    """
+    Returns a dictionary containing information on all Split user groups, where the keys are the group names and the 
+    values are a dictionary containing the group name and a list of users in that group.
+
+    Returns:
+        A dictionary containing information on all Split user groups.
+    """
     status = "ACTIVE"
     groups_dict = get_groups()
     users = client.users.list(status)
@@ -242,6 +330,12 @@ def get_groups_users():
 #-------------------------------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------------------------------
 def search_workspaces_or_groups():
+    """
+    Search for a workspace or Split group by name, and print information on the one found.
+    
+    Returns:
+        output to stdout
+    """
     while True:
         ws_or_gr_name = input("Enter the workspace or group name to search or 1 to go back to previous menu: ")
         if ws_or_gr_name == "1":
@@ -264,6 +358,13 @@ def search_workspaces_or_groups():
                     pprint.pprint(user_list)
 
 def search_environments():
+    """
+    Search for environments with the given name across all workspaces and return their information. Optionally, 
+    display all Split definitions in each environment.
+
+    Returns:
+        Output to stdout
+    """
     while True:
         env_name = input("Enter the environment name to search or 1 to go back to previous menu: ")
         if env_name == "1":
@@ -293,6 +394,13 @@ def search_environments():
                 print(f"Environment not found with name {env_name}")
 
 def search_segments():
+    """
+    Searches for a segment with a given name across all environments and workspaces.
+    Prints information on all matching segments.
+
+    Returns:
+        Output to stdout
+    """
     segment_name = input("Enter the name of the segment: ")
     print("Showing segments of the same name across all environments and workspaces. This will take sometime, please wait...")
     segments_data = get_segments()
@@ -311,6 +419,13 @@ def search_segments():
         print(f"Segment not found with name {segment_name}")
 
 def search_users():
+    """
+    Search for a specific user by email address and display information on their status, 
+    groups, and other details.
+
+    Returns:
+        Output to stdout
+    """
     while True:
         email = input("Enter the email of the user or 1 to go back to previous menu: ")
         if email == "1":
@@ -337,6 +452,16 @@ def search_users():
 
 
 def get_split_definitions_by_name(split_name):
+    """
+    Returns a dictionary containing information on all Split definitions for a given split name,
+    where the keys are the split names and the values are a list of split definitions.
+
+    Args:
+        split_name (str): The name of the Split definition to retrieve.
+
+    Returns:
+        A dictionary containing information on all Split definitions for the given split name.
+    """
     all_definitions = get_all_splits_definitions()
     definitions = {split_name: []}
 
@@ -346,6 +471,14 @@ def get_split_definitions_by_name(split_name):
     return definitions
 
 def search_splits():
+    """
+    Searches for a specific Split by name and displays information on its attributes such as its name, ID, 
+    workspace, environment, treatments, rules, etc. Optionally, the user can choose to display all the 
+    Split definitions for the searched Split across all workspaces and environments.
+
+    Returns:
+        Output to stdout.
+    """
     splits = get_splits()
     while True:
         split_name = input("Enter the split name to search or 1 to go back to previous menu: ")
@@ -380,35 +513,95 @@ def export_data_to_json(data_type, data_getter, file_name_format):
         file.write(json.dumps(data, indent=4))
 
 def export_data(data_type, data_getter, file_name_format=None):
+    """
+    Exports data to a JSON file with the given filename and displays a success message.
+
+    Args:
+        data_type (str): The type of data being exported.
+        data_getter (function): A function that returns the data to be exported.
+        file_name_format (str): A string with placeholders for formatting the filename, such as "{date}".
+
+    Returns:
+        None
+    """
     print("Exporting data, please wait...")
     export_data_to_json(data_type, data_getter, file_name_format)
     print(f"{data_type} data exported successfully!")
 
 def export_splits():
+    """
+    Export all Split data as a JSON file with the name "splits_data.json" to the current working directory.
+
+    Returns:
+        Output to stdout
+    """
     export_data("splits", get_splits, "{0}_splits")
 
 def export_users():
+    """
+    Export all user data as a JSON file with the name "users_data.json" to the current working directory.
+
+    Returns:
+        Output to stdout
+    """
     export_data("users", get_all_users, "{0}_users")
 
 def export_workspaces():
+    """
+    Export all workspace data as a JSON file with the name "workspaces_data.json" to the current working directory.
+
+    Returns:
+        Output to stdout
+    """
     export_data("workspaces", get_workspace_data, "{0}_workspaces")
 
 def export_segments():
+    """
+    Export all segment data as a JSON file with the name "segments_data.json" to the current working directory.
+
+    Returns:
+        Output to stdout
+    """
     export_data("segments", get_segments, "{0}_segments")
 
 def export_groups():
+    """
+    Export all group data as a JSON file with the name "groups_data.json" to the current working directory.
+
+    Returns:
+        Output to stdout
+    """
     export_data("groups", get_groups_users, "{0}_groups")
 
 def export_environments():
+    """
+    Export all environment data as a JSON file with the name "environments_data.json" to the current working directory.
+
+    Returns:
+        Output to stdout
+    """
     export_data("environments", get_environments_data, "{0}_environments")
 
 def export_split_definitions():
+    """
+    Export all Split definition data as a JSON file with the name "split_definitions_data.json" to the current working 
+    directory.
+
+    Returns:
+        Output to stdout
+    """
     export_data("split_definitions", get_all_splits_definitions, "{0}_split_definitions")
 
 #-------------------------------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------------------------------
 def delete_splits():
+    """
+    Deletes a specific Split by name within a given workspace.
+
+    Returns:
+        Output to stdout.
+    """
     while True:
         workspace_name = input("Enter the workspace name or 1 to go back to prevous menu: ")
         if workspace_name == "1":
@@ -441,10 +634,29 @@ def delete_splits():
 #-------------------------------------------------------------------------------------------------------
 
 def format_text(text):
+    """
+    Replace underscores in the text with spaces and format the text to title case.
+
+    Args:
+        text: A string to be formatted.
+
+    Returns:
+        A formatted string in title case.
+    """
     text = re.sub('_', ' ', text)
     return text.title()
 
 def display_options(options, menu_name):
+    """
+    Display a list of options as a formatted menu.
+
+    Args:
+        options: A dictionary containing the menu options.
+        menu_name: A string containing the name of the menu to display.
+
+    Returns:
+        Output to stdout.
+    """
     formatted_options = [
         f"{key}. {format_text(func.__name__)}"
         for key, func in options.items()
@@ -455,6 +667,20 @@ def display_options(options, menu_name):
     print("\n".join(formatted_options))
 
 def get_choice(options, menu_name):
+    """
+    Displays the options of the given menu and prompts the user to enter a choice. 
+    If the choice is valid, the corresponding function is called. If the choice is 
+    invalid, an error message is displayed and the prompt is repeated.
+
+    Args:
+        options (dict): A dictionary containing the menu options where keys are the option numbers 
+            and values are the functions to execute when the option is chosen.
+        menu_name (str): The name of the menu to be displayed.
+
+    Returns:
+        Output to stdout.
+    """
+
     while True:
         display_options(options, menu_name)
         choice = input(f"Enter your choice (1-{len(options)}): ")
