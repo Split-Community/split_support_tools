@@ -498,7 +498,7 @@ def operations():
         "2": main_menu,
         "3": quit_tool
     }
-    get_choice(options, "Eperations")
+    get_choice(options, "Operations")
 
 def main_menu():
     options = {
