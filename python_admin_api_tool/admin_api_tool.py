@@ -90,13 +90,26 @@ def get_environments_data():
 
 def get_environments():
     """
-    Returns a dictionary of all environment IDs and names across all workspaces.
-    """
-    return {env.id: env.name for ws_id, _ in get_workspaces().items() for env in client.environments.list(ws_id)}
+    Retrieve a dictionary of environment data
 
-def get_segments():
+    Returns:
+        dict: A dictionary of environment name, id, and workspace.
+    """
+    environments = {}
+    for ws_id, ws_name in get_workspaces().items():
+        for env in client.environments.list(ws_id):
+            environments[env.id] = {
+                "Name": env.name,
+                "Workspace Name": ws_name
+            }
+    return environments
+
+def get_segments(include_keys=True):
     """
     Get data for all segments in all environments across all workspaces.
+
+    Args:
+        include_keys (bool): Whether to include the segment keys or not. Defaults to True.
 
     Returns:
         A dictionary containing information on all segments, grouped by segment name and environment.
@@ -104,30 +117,32 @@ def get_segments():
     segments_data = {}
 
     for workspace_id, workspace_name in get_workspaces().items():
-        ws = client.workspaces.find(workspace_name)
-
-        for env in client.environments.list(ws.id):
-            for segDef in client.segment_definitions.list(env.id, ws.id):
-                segments_data["Segment: " + segDef.name + " in " + "Environment: " + env._name] = {
+        for env in client.environments.list(workspace_id):
+            for segDef in client.segment_definitions.list(env.id, workspace_id):
+                segment_info = {
                     "Segment Name": segDef.name,
                     "Environment": {
                         "ID": env.id,
                         "Name": env._name
                     },
-                    "Workspace" :
-                    {
-                        "ID" : ws.id,
-                        "Name" : workspace_name
+                    "Workspace": {
+                        "ID": workspace_id,
+                        "Name": workspace_name
                     },
                     "Traffic Type": {
                         "ID": segDef._trafficType._id,
                         "Name": segDef._trafficType._name
                     },
-                    "Creation Time": segDef._creationTime,
-                    "Keys": client.segment_definitions.find(segDef.name, env.id, ws.id).get_keys()
+                    "Creation Time": segDef._creationTime
                 }
 
+                if include_keys:
+                    segment_info["Keys"] = client.segment_definitions.find(segDef.name, env.id, ws.id).get_keys()
+
+                segments_data[f"Segment: {segDef.name} in Environment: {env._name}"] = segment_info
+
     return segments_data
+
 
 def get_groups():
     """
@@ -167,6 +182,27 @@ def get_all_users():
         }
         users[user._name] = user_data
     return users
+
+def get_groups_users():
+    """
+    Returns a dictionary containing information on all Split user groups, where the keys are the group names and the 
+    values are a dictionary containing the group name and a list of users in that group.
+
+    Returns:
+        A dictionary containing information on all Split user groups.
+    """
+    status = "ACTIVE"
+    groups_dict = get_groups()
+    users = client.users.list(status)
+    users_data = {}
+    for user in users:
+        for group in user._groups:
+            if groups_dict[group["id"]] in users_data:
+                users_data[groups_dict[group["id"]]].append(user._name)
+            else:
+                users_data[groups_dict[group["id"]]] = [user._name]
+    groups_data = {group: {"Group": group, "Users": users} for group, users in users_data.items()}
+    return groups_data
 
 def get_splits():
     """
@@ -305,27 +341,6 @@ def get_all_splits_definitions():
                     definitions[split_name].extend(split_definitions)
     return definitions
 
-def get_groups_users():
-    """
-    Returns a dictionary containing information on all Split user groups, where the keys are the group names and the 
-    values are a dictionary containing the group name and a list of users in that group.
-
-    Returns:
-        A dictionary containing information on all Split user groups.
-    """
-    status = "ACTIVE"
-    groups_dict = get_groups()
-    users = client.users.list(status)
-    users_data = {}
-    for user in users:
-        for group in user._groups:
-            if groups_dict[group["id"]] in users_data:
-                users_data[groups_dict[group["id"]]].append(user._name)
-            else:
-                users_data[groups_dict[group["id"]]] = [user._name]
-    groups_data = {group: {"Group": group, "Users": users} for group, users in users_data.items()}
-    return groups_data
-
 #-------------------------------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------------------------------
@@ -403,7 +418,7 @@ def search_segments():
     """
     segment_name = input("Enter the name of the segment: ")
     print("Showing segments of the same name across all environments and workspaces. This will take sometime, please wait...")
-    segments_data = get_segments()
+    segments_data = get_segments(include_keys=False)
     found = False
     
     for key, segment in segments_data.items():
@@ -503,6 +518,94 @@ def search_splits():
                     pprint.pprint(definition_data)
         else:
             print("Split not found")
+#-------------------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------------------------------
+def list_all_workspaces():
+    """
+    List all workspaces with their corresponding ID and name.
+
+    Returns:
+        Output to stdout.
+    """
+    workspaces = get_workspaces()
+    print("List of workspaces:")
+    for id, name in workspaces.items():
+        print(f"ID: {id}, Name: {name}")
+        
+def list_all_environments():
+    """
+    Displays a list of all environments, including their ID, name, and workspace name.
+    
+    Returns:
+        Output to stdout.
+    """
+    print("List of all environments:")
+    for environment_id, environment_data in get_environments().items():
+        print("-------------------------------------------")
+        print(f"Name: {environment_data['Name']}")
+        print(f"ID: {environment_id}")
+        print(f"Workspace Name: {environment_data['Workspace Name']}")
+
+def list_all_groups():
+    """
+    List all user groups.
+    
+    Returns:
+        Output to stdout.
+    """
+    groups = get_groups()
+    print("List of all groups\n------")
+    for group_id, group_name in groups.items():
+        print(f"ID: {group_id}")
+        print(f"Name: {group_name}\n")
+
+def list_all_segments():
+    """
+    List all segments with their names, IDs, environment names, and workspace names.
+
+    Returns:
+        Output to stdout.
+    
+    """
+    segments = get_segments(include_keys=False)
+    print("List of all segments\n------")
+    for segment, segment_data in segments.items():
+        print(f"Segment Name: {segment_data['Segment Name']}")
+        print(f"Environment Name: {segment_data['Environment']['Name']}")
+        print(f"Workspace Name: {segment_data['Workspace']['Name']}\n")
+
+def list_all_splits():
+    """
+    List all splits with their corresponding ID, name, workspace ID, and workspace name.
+
+    Returns:
+        Output to stdout.
+    """
+    splits = get_splits()
+    print("List of all splits:")
+    for split_name, split_data in splits.items():
+        for data in split_data:
+            print("-------------------------------------------")
+            print(f"Name: {split_name}")
+            print(f"ID: {data['ID']}")
+            print(f"Workspace Name: {data['Workspace Name']}")
+            print(f"Workspace ID: {data['Workspace ID']}")
+
+def list_all_users():
+    """
+    Lists all active Split users and their associated group memberships.
+
+    Returns:
+        Output to stdout.
+    """
+    users = get_all_users()
+    print("List of all users\n------")
+    for user_name, user_data in users.items():
+        print(f"Name: {user_name}")
+        print(f"Email: {user_data['Email']}")
+        groups = ", ".join([group["Name"] for group in user_data["Groups"]])
+        print(f"Groups: {groups}\n")
 #-------------------------------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------------------------------
@@ -632,7 +735,6 @@ def delete_splits():
 #-------------------------------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------------------------------
-
 def format_text(text):
     """
     Replace underscores in the text with spaces and format the text to title case.
@@ -704,6 +806,19 @@ def search():
     }
     get_choice(options, "Search")
 
+def list():
+    options = {
+        "1": list_all_workspaces,
+        "2": list_all_environments,
+        "3": list_all_groups,
+        "4": list_all_segments,
+        "5": list_all_splits,
+        "6": list_all_users,
+        "7": main_menu,
+        "8": quit_tool,
+    }
+    get_choice(options, "List")
+
 def export_all_data():
     options = {
         "1": export_groups,
@@ -729,9 +844,10 @@ def operations():
 def main_menu():
     options = {
         "1": search,
-        "2": export_all_data,
-        "3": operations,
-        "4": quit_tool
+        "2": list,
+        "3": export_all_data,
+        "4": operations,
+        "5": quit_tool
     }
     get_choice(options, "Main")
 
