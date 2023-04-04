@@ -38,7 +38,7 @@ This is a simple python tool utilizing the Split's [Python PyPi library for Spli
 
 ## Usage:
 
-- The menu is straight forward with the options. There are 3 choices: Search, Export, and Operations.
+- The menu is straight forward with the options. There are 4 choices: Search, List, Export, and Operations.
 
 - The Search options are:
 
@@ -59,6 +59,29 @@ This is a simple python tool utilizing the Split's [Python PyPi library for Spli
    - This will search for all segments of the same name across all workspaces and environments, and will also display all the keys of the segments.
 
 ```
+
+The List options are self-explanatory. Note that these do not show the full details (such as Split's definitions or segment keys), please use the Export functions to get the full data.
+
+```
+1. List All Workspaces
+   - List all workspaces in the org.
+
+2. List All Environments
+   - List all environments across all workspaces.
+
+3. List All Groups
+   - List all the groups, will not show list of users.
+
+4. List All Segments
+   - List all the segments for all environments and workspaces, will not show the segment keys.
+
+5. List All Splits
+   - List all the splits across all workspaces, will not show split's definitions.
+
+6. List All Users
+   - List all active users.
+```
+
 - Similarly, the Export options are straightforward. By default, all exports are json format. Please also see Additional tool for info.
 
 ```
