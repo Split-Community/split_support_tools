@@ -60,7 +60,7 @@ This is a simple python tool utilizing the Split's [Python PyPi library for Spli
 
 ```
 
-The List options are self-explanatory. Note that these do not show the full details (such as Split's definitions or segment keys), please use the Export functions to get the full data.
+- The List options are self-explanatory. Note that these do not show the full details (such as Split's definitions or segment keys), please use the Export functions to get the full data.
 
 ```
 1. List All Workspaces
