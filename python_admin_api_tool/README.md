@@ -24,7 +24,7 @@ This is a simple python tool utilizing the Split's [Python PyPi library for Spli
 6. Make a copy of the example environment variables file
 
    ```bash
-   $ cp .env.example .env
+   $ cp env_example .env
    ```
 
 7. Add your [Admin API key](https://help.split.io/hc/en-us/articles/360019916211-API-keys#adding-admin-api-keys) to the newly created `.env` file
