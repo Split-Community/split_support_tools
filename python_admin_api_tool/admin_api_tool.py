@@ -25,12 +25,10 @@ def get_workspaces():
     global cache_data
 
     if cache_data["workspaces"] is None:
-        # If the workspaces are not in the cache, fetch them from the server
         workspace_dict = {ws.id: ws.name for ws in client.workspaces.list()}
         cache_data["workspaces"] = workspace_dict
-        save_cache() # Save the updated cache
+        save_cache()
     else:
-        # If the workspaces are in the cache, retrieve them from there
         workspace_dict = cache_data["workspaces"]
 
     return workspace_dict
@@ -45,10 +43,8 @@ def get_workspace_data():
         dict: A dictionary of workspace data.
     """
     if cache_data["workspace_data"] is not None:
-        # return cached data if available
         return cache_data["workspace_data"]
     else:
-        # retrieve data from API if not cached
         workspace_data = {
             ws.id: {
                 "Name": ws.name,
@@ -56,7 +52,6 @@ def get_workspace_data():
             }
             for ws in client.workspaces.list()
         }
-        # save to cache
         cache_data["workspace_data"] = workspace_data
         save_cache()
         return workspace_data
@@ -109,7 +104,6 @@ def get_environments_data():
             envs_for_ws[env._name] = env_dict
         all_envs["Workspace: " + ws_name] = envs_for_ws
     
-    # Update cache
     cache_data['environments_data'] = all_envs
     save_cache()
     
@@ -131,7 +125,7 @@ def get_environments():
                     "Workspace Name": ws_name
                 }
         cache_data["environments"] = environments
-        save_cache()  # Save the updated cache
+        save_cache() 
     else:
         environments = cache_data["environments"]
     return environments
@@ -148,11 +142,9 @@ def get_segments(include_keys=True):
     """
     global cache_data
 
-    # Check if segments data is already in the cache
     if cache_data.get('segments') is not None:
         return cache_data['segments']
 
-    # If not, fetch the segments data
     segments_data = {}
 
     for workspace_id, workspace_name in get_workspaces().items():
@@ -180,7 +172,6 @@ def get_segments(include_keys=True):
 
                 segments_data[f"Segment: {segDef.name} in Environment: {env._name}"] = segment_info
 
-    # Add the segments data to the cache
     cache_data['segments'] = segments_data
 
     return segments_data
@@ -269,10 +260,8 @@ def get_splits():
     """
     global cache_data
     if cache_data["splits"]:
-        #print("Retrieving data from cache...")
         return cache_data["splits"]
     else:
-        #print("Retrieving data from Split")
         workspaces = get_workspaces()
         splits = {}
         for workspace_id, workspace_name in workspaces.items():
@@ -484,7 +473,7 @@ def search_environments():
                     pprint.pprint(env)
 
                 see_split_definitions = input("Do you want to see all the split definitions in this environment? (yes/no): ")
-                if see_split_definitions.lower() == "yes":
+                if see_split_definitions.lower() == "yes" or see_split_definitions.lower() == "y":
                     for env in found_envs:
                         definitions = get_split_definitions(env["ID"], env["Workspace ID"])
                         print(f"Split definitions for environment {env_name} in workspace {env['Workspace Name']}:")
@@ -800,7 +789,7 @@ def delete_splits():
                     break
                 else:
                     confirm = input(f"Are you sure you want to delete the split '{split_name}' in workspace '{workspace_name}'? (yes/no): ")
-                    if confirm.lower() == "yes":
+                    if confirm.lower() == "yes" or confirm.lower() == "y":
                         try:
                             deleted = ws.delete_split(split_name)
                             if deleted:
@@ -844,14 +833,33 @@ def load_cache():
 
     # Populate the cache with all_splits_definitions if it's not already in the cache
     if not cache_data["all_splits_definitions"]:
-        print(f"First run of the script will populate the Split Definitions cache data for faster loading. Please wait...")
+        print(f"Caching split definition on the first script run or update.")
+        print(f"Please wait...")
         cache_data["all_splits_definitions"] = get_all_splits_definitions()
 
     # Populate the cache with segments if they're not already in the cache
     if not cache_data["segments"]:
-        print(f"First run of the script will populate the Segment cache data for faster loading. Please wait...")
+        print(f"Caching segments on the first script run or update.")
+        print(f"Please wait...")
         cache_data["segments"] = get_segments()
     save_cache()
+
+def update_cache():
+    """
+    Updates the cache with the latest data for all splits and segments and saves it to a file.
+    """
+    global cache_data
+    
+    try:
+        os.remove(CACHE_FILE)
+        #print(f"Cache file '{CACHE_FILE}' removed.")
+    except OSError:
+        pass
+    
+    # Load the cache with fresh data
+    print(f"Fetching latest data.")
+    load_cache()
+    print(f"Cache updated with latest data.")
 
 def save_cache():
     """
@@ -861,13 +869,11 @@ def save_cache():
     with open(CACHE_FILE, "wb") as f:
         pickle.dump(cache_data, f)
 
-load_cache() # Load the cache at the start of the script
-
 def quit_tool():
     """
     Saves the cache and exits the script.
     """
-    save_cache() # Save the cache before quitting the script
+    save_cache()
     print("Goodbye!")
     exit()
 #-------------------------------------------------------------------------------------------------------
@@ -991,9 +997,11 @@ def main_menu():
         "2": list,
         "3": export_all_data,
         "4": operations,
-        "5": quit_tool
+        "5": update_cache,
+        "6": quit_tool
     }
     get_choice(options, "Main")
 
 if __name__ == '__main__':
-    main_menu()
+    load_cache()
+    main_menu()   
