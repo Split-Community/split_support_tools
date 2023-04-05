@@ -36,7 +36,7 @@ This is a simple python tool utilizing the Split's [Python PyPi library for Spli
 
 7. Add your [Admin API key](https://help.split.io/hc/en-us/articles/360019916211-API-keys#adding-admin-api-keys) to the newly created `.env` file
    - Note that it's recommend to use an API keys that is scoped across all environments and workspaces
-   - If the the environment/workspace has access restrictions, you might encounter an error.
+   - If the environment/workspace has access restrictions, you might encounter an error.
 
 8. Run the tool
 
