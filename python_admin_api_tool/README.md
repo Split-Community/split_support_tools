@@ -7,10 +7,12 @@ This is a simple python tool utilizing the Split's [Python PyPi library for Spli
 1. If you don’t have Python 3 installed, [install it from here](https://www.python.org/downloads/)
    - Please note that on MacOS, the python commmand is `python3`
 
-2. Clone this repository
+2. Clone this repository and go into it
 
    ```bash
    git clone --depth 1 --filter=tree:0 git@github.com:Split-Community/split_support_tools.git --branch main --single-branch python_admin_api_tool
+
+   cd python_admin_api_tool/
    ```
 
 3. Create a new virtual environment
@@ -40,8 +42,11 @@ This is a simple python tool utilizing the Split's [Python PyPi library for Spli
 
    ```bash
    python admin_api_tool.py
-   
-   or python3 admin_api_tool.py on MacOS
+   ```
+   or on MacOS
+
+   ```bash
+   python3 admin_api_tool.py
    ```
 
 ## Caching
