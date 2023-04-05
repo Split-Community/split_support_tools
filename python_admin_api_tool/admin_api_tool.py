@@ -2,6 +2,7 @@ import os
 import json
 import re
 import pprint
+import pickle
 from dotenv import load_dotenv
 from splitapiclient.main import get_client
 from splitapiclient.util.exceptions import HTTPNotFoundError
@@ -13,10 +14,6 @@ API_KEY = os.environ.get("ADMIN_API_KEY")
 
 client = get_client({'apikey': API_KEY})
 
-def quit_tool():
-    print("Goodbye!")
-    exit()
-
 def get_workspaces():
     """
     Retrieve a dictionary of workspaces, where the keys are the workspace IDs
@@ -25,7 +22,18 @@ def get_workspaces():
     Returns:
         dict: A dictionary of workspace IDs and names.
     """
-    return {ws.id: ws.name for ws in client.workspaces.list()}
+    global cache_data
+
+    if cache_data["workspaces"] is None:
+        # If the workspaces are not in the cache, fetch them from the server
+        workspace_dict = {ws.id: ws.name for ws in client.workspaces.list()}
+        cache_data["workspaces"] = workspace_dict
+        save_cache() # Save the updated cache
+    else:
+        # If the workspaces are in the cache, retrieve them from there
+        workspace_dict = cache_data["workspaces"]
+
+    return workspace_dict
 
 def get_workspace_data():
     """
@@ -36,21 +44,35 @@ def get_workspace_data():
     Returns:
         dict: A dictionary of workspace data.
     """
-    return {
-        ws.id: {
-            "Name": ws.name,
-            "Requires Title And Comments": ws._requiresTitleAndComments,
+    if cache_data["workspace_data"] is not None:
+        # return cached data if available
+        return cache_data["workspace_data"]
+    else:
+        # retrieve data from API if not cached
+        workspace_data = {
+            ws.id: {
+                "Name": ws.name,
+                "Requires Title And Comments": ws._requiresTitleAndComments,
+            }
+            for ws in client.workspaces.list()
         }
-        for ws in client.workspaces.list()
-    }
+        # save to cache
+        cache_data["workspace_data"] = workspace_data
+        save_cache()
+        return workspace_data
 
 def get_environments_data():
-    """Returns a dictionary containing information about all environments across all workspaces.
+    """
+    Retrieve a dictionary containing information about all environments across all workspaces.
 
     Returns:
-    dict: A dictionary with keys as workspace names and values as dictionaries containing information 7
-    about all environments of the respective workspace.
+        dict: A dictionary with keys as workspace names and values as dictionaries containing information
+        about all environments of the respective workspace.
     """
+    global cache_data
+    if cache_data['environments_data'] is not None:
+        return cache_data['environments_data']
+    
     all_envs = {}
     workspaces = get_workspaces()
     for ws_id, ws_name in workspaces.items():
@@ -86,6 +108,11 @@ def get_environments_data():
                 }
             envs_for_ws[env._name] = env_dict
         all_envs["Workspace: " + ws_name] = envs_for_ws
+    
+    # Update cache
+    cache_data['environments_data'] = all_envs
+    save_cache()
+    
     return all_envs
 
 def get_environments():
@@ -95,13 +122,18 @@ def get_environments():
     Returns:
         dict: A dictionary of environment name, id, and workspace.
     """
-    environments = {}
-    for ws_id, ws_name in get_workspaces().items():
-        for env in client.environments.list(ws_id):
-            environments[env.id] = {
-                "Name": env.name,
-                "Workspace Name": ws_name
-            }
+    if cache_data["environments"] is None:
+        environments = {}
+        for ws_id, ws_name in get_workspaces().items():
+            for env in client.environments.list(ws_id):
+                environments[env.id] = {
+                    "Name": env.name,
+                    "Workspace Name": ws_name
+                }
+        cache_data["environments"] = environments
+        save_cache()  # Save the updated cache
+    else:
+        environments = cache_data["environments"]
     return environments
 
 def get_segments(include_keys=True):
@@ -114,6 +146,13 @@ def get_segments(include_keys=True):
     Returns:
         A dictionary containing information on all segments, grouped by segment name and environment.
     """
+    global cache_data
+
+    # Check if segments data is already in the cache
+    if cache_data.get('segments') is not None:
+        return cache_data['segments']
+
+    # If not, fetch the segments data
     segments_data = {}
 
     for workspace_id, workspace_name in get_workspaces().items():
@@ -137,12 +176,14 @@ def get_segments(include_keys=True):
                 }
 
                 if include_keys:
-                    segment_info["Keys"] = client.segment_definitions.find(segDef.name, env.id, ws.id).get_keys()
+                    segment_info["Keys"] = client.segment_definitions.find(segDef.name, env.id, workspace_id).get_keys()
 
                 segments_data[f"Segment: {segDef.name} in Environment: {env._name}"] = segment_info
 
-    return segments_data
+    # Add the segments data to the cache
+    cache_data['segments'] = segments_data
 
+    return segments_data
 
 def get_groups():
     """
@@ -151,7 +192,14 @@ def get_groups():
     Returns:
         dict: A dictionary where the keys are the group IDs and the values are the group names.
     """
-    return {group._id: group._name for group in client.groups.list()}
+    if cache_data["groups"] is not None:
+        return cache_data["groups"]
+
+    groups = {group._id: group._name for group in client.groups.list()}
+    cache_data["groups"] = groups
+    save_cache()
+
+    return groups
 
 def get_all_users():
     """
@@ -162,6 +210,9 @@ def get_all_users():
         including name, email, status, and a list of groups to which the user belongs.
 
     """
+    if cache_data["users"]:
+        return cache_data["users"]
+    
     groups_dict = get_groups()
     users = {}
 
@@ -181,6 +232,9 @@ def get_all_users():
             ]
         }
         users[user._name] = user_data
+    
+    cache_data["users"] = users
+    save_cache()
     return users
 
 def get_groups_users():
@@ -191,18 +245,20 @@ def get_groups_users():
     Returns:
         A dictionary containing information on all Split user groups.
     """
-    status = "ACTIVE"
     groups_dict = get_groups()
-    users = client.users.list(status)
-    users_data = {}
-    for user in users:
-        for group in user._groups:
-            if groups_dict[group["id"]] in users_data:
-                users_data[groups_dict[group["id"]]].append(user._name)
-            else:
-                users_data[groups_dict[group["id"]]] = [user._name]
-    groups_data = {group: {"Group": group, "Users": users} for group, users in users_data.items()}
+    all_users = get_all_users()
+    groups_data = {}
+    for group_id, group_name in groups_dict.items():
+        group_users = []
+        for user_name, user_data in all_users.items():
+            for group in user_data['Groups']:
+                if group['ID'] == group_id:
+                    group_users.append(user_name)
+                    break
+        groups_data[group_name] = {"Group": group_name, "Users": group_users}
+    save_cache()
     return groups_data
+    
 
 def get_splits():
     """
@@ -211,30 +267,38 @@ def get_splits():
     Returns:
         A dictionary containing information on all splits, grouped by split name.
     """
-    workspaces = get_workspaces()
-    splits = {}
-    for workspace_id, workspace_name in workspaces.items():
-        for split in client.splits.list(workspace_id):
-            split_data = {
-                "Workspace Name": workspace_name,
-                "Workspace ID": workspace_id,
-                "ID": split.id,
-                "Name": split.name,
-                "Description": split.description,
-                "Traffic Type ID": split._trafficType._id,
-                "Traffic Type Name": split._trafficType.name,
-                "Creation Time": split._creationTime,
-                "Rollout Status ID": split._rolloutStatus['id'],
-                "Rollout Status Name": split._rolloutStatus['name'],
-                "Rollout Status Timestamp": split._rolloutStatusTimestamp,
-                "Tags": split._tags,
-                "Owners": split._owners,
-            }
-            if split.name not in splits:
-                splits[split.name] = [split_data]
-            else:
-                splits[split.name].append(split_data)
-    return splits
+    global cache_data
+    if cache_data["splits"]:
+        #print("Retrieving data from cache...")
+        return cache_data["splits"]
+    else:
+        #print("Retrieving data from Split")
+        workspaces = get_workspaces()
+        splits = {}
+        for workspace_id, workspace_name in workspaces.items():
+            for split in client.splits.list(workspace_id):
+                split_data = {
+                    "Workspace Name": workspace_name,
+                    "Workspace ID": workspace_id,
+                    "ID": split.id,
+                    "Name": split.name,
+                    "Description": split.description,
+                    "Traffic Type ID": split._trafficType._id,
+                    "Traffic Type Name": split._trafficType.name,
+                    "Creation Time": split._creationTime,
+                    "Rollout Status ID": split._rolloutStatus['id'],
+                    "Rollout Status Name": split._rolloutStatus['name'],
+                    "Rollout Status Timestamp": split._rolloutStatusTimestamp,
+                    "Tags": split._tags,
+                    "Owners": split._owners,
+                }
+                if split.name not in splits:
+                    splits[split.name] = [split_data]
+                else:
+                    splits[split.name].append(split_data)
+        cache_data["splits"] = splits
+        save_cache()
+        return splits
 
 def get_split_definition(environment_id, workspace_id, split_def):
     """
@@ -250,8 +314,14 @@ def get_split_definition(environment_id, workspace_id, split_def):
         environment, traffic type, treatments, rules, default rules, and other metadata.
 
     """
+    cache_key = f"split_def:{environment_id}:{workspace_id}:{split_def.id}"
+    if cache_data["splits_definitions"] is None:
+        cache_data["splits_definitions"] = {}
+    if cache_key in cache_data["splits_definitions"]:
+        return cache_data["splits_definitions"][cache_key]
+    
     workspaces = get_workspaces()
-    return {
+    data = {
         "Workspace Name" :workspaces[workspace_id],
         "Name": split_def.name,
         "environment": {
@@ -299,6 +369,10 @@ def get_split_definition(environment_id, workspace_id, split_def):
         "lastUpdateTime": split_def._lastUpdateTime
     }
 
+    cache_data["splits_definitions"][cache_key] = data
+    save_cache()
+    return data
+
 def get_split_definitions(environment_id, workspace_id):
     """
     Get data for all Split definitions in a specific environment and workspace.
@@ -312,6 +386,10 @@ def get_split_definitions(environment_id, workspace_id):
         Each Split definition contains data on the definition's treatments, rules, and other attributes.
 
     """
+    cache_key = f"split_defs:{environment_id}:{workspace_id}"
+    if cache_data["splits_definitions"].get(cache_key):
+        return cache_data["splits_definitions"][cache_key]
+
     definitions = {}
     for split_def in client.split_definitions.list(environment_id, workspace_id):
         split_name = split_def.name
@@ -319,6 +397,8 @@ def get_split_definitions(environment_id, workspace_id):
             definitions[split_name] = [get_split_definition(environment_id, workspace_id, split_def)]
         else:
             definitions[split_name].append(get_split_definition(environment_id, workspace_id, split_def))
+    cache_data["splits_definitions"].setdefault(cache_key, definitions)
+    save_cache()
     return definitions
 
 def get_all_splits_definitions():
@@ -328,6 +408,9 @@ def get_all_splits_definitions():
     Returns:
         A dictionary containing information on all Split definitions, grouped by Split name.
     """
+    if cache_data["all_splits_definitions"]:
+        return cache_data["all_splits_definitions"]
+    
     workspaces = get_workspaces()
     environments = get_environments()
     definitions = {}
@@ -339,8 +422,9 @@ def get_all_splits_definitions():
                     definitions[split_name] = split_definitions
                 else:
                     definitions[split_name].extend(split_definitions)
+    cache_data["all_splits_definitions"] = definitions
+    save_cache()
     return definitions
-
 #-------------------------------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------------------------------
@@ -420,7 +504,6 @@ def search_segments():
     print("Showing segments of the same name across all environments and workspaces. This will take sometime, please wait...")
     segments_data = get_segments(include_keys=False)
     found = False
-    
     for key, segment in segments_data.items():
         if segment_name == segment['Segment Name']:
             found = True
@@ -464,7 +547,6 @@ def search_users():
                 pprint.pprint(groupnames)
             else:
                 print(f"User not found with email {email}")
-
 
 def get_split_definitions_by_name(split_name):
     """
@@ -735,6 +817,64 @@ def delete_splits():
 #-------------------------------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------------------------------
+CACHE_FILE = ".split_cache.pkl"
+
+def load_cache():
+    """
+    Loads cached data from a file if it exists, and populates the cache with data for all splits and segments
+    if they are not already in the cache. The cache is then saved to a file.
+    """
+    global cache_data
+    if os.path.exists(CACHE_FILE):
+        with open(CACHE_FILE, "rb") as f:
+            cache_data = pickle.load(f)
+    else:
+        cache_data = {
+            "workspaces": None,
+            "workspace_data": None,
+            "environments": None,
+            "environments_data": None,
+            "groups": None,
+            "segments": None,
+            "splits": None,
+            "splits_definitions": {},
+            "users": None,
+            "all_splits_definitions": None
+        }
+
+    # Populate the cache with all_splits_definitions if it's not already in the cache
+    if not cache_data["all_splits_definitions"]:
+        print(f"First run of the script will populate the Split Definitions cache data for faster loading. Please wait...")
+        cache_data["all_splits_definitions"] = get_all_splits_definitions()
+
+    # Populate the cache with segments if they're not already in the cache
+    if not cache_data["segments"]:
+        print(f"First run of the script will populate the Segment cache data for faster loading. Please wait...")
+        cache_data["segments"] = get_segments()
+    save_cache()
+
+def save_cache():
+    """
+    Saves the cache to a file.
+    """
+    global cache_data
+    with open(CACHE_FILE, "wb") as f:
+        pickle.dump(cache_data, f)
+
+load_cache() # Load the cache at the start of the script
+
+def quit_tool():
+    """
+    Saves the cache and exits the script.
+    """
+    save_cache() # Save the cache before quitting the script
+    print("Goodbye!")
+    exit()
+#-------------------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------------------------------
+formatted_text_cache = {}
+
 def format_text(text):
     """
     Replace underscores in the text with spaces and format the text to title case.
@@ -745,8 +885,11 @@ def format_text(text):
     Returns:
         A formatted string in title case.
     """
-    text = re.sub('_', ' ', text)
-    return text.title()
+    if text not in formatted_text_cache:
+        formatted_text_cache[text] = re.sub('_', ' ', text).title()
+    return formatted_text_cache[text]
+
+formatted_options_cache = {}
 
 def display_options(options, menu_name):
     """
@@ -759,14 +902,15 @@ def display_options(options, menu_name):
     Returns:
         Output to stdout.
     """
-    formatted_options = [
-        f"{key}. {format_text(func.__name__)}"
-        for key, func in options.items()
-    ]
+    if menu_name not in formatted_options_cache:
+        formatted_options_cache[menu_name] = [
+            f"{key}. {format_text(func.__name__)}"
+            for key, func in options.items()
+        ]
     print("----------------------------------------")
     print(f"PYTHON ADMIN API TOOL - {menu_name}")
     print("----------------------------------------")
-    print("\n".join(formatted_options))
+    print("\n".join(formatted_options_cache[menu_name]))
 
 def get_choice(options, menu_name):
     """
