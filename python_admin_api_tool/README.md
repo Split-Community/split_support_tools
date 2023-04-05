@@ -5,40 +5,52 @@ This is a simple python tool utilizing the Split's [Python PyPi library for Spli
 ## Setup
 
 1. If you don’t have Python 3 installed, [install it from here](https://www.python.org/downloads/)
+   - Please note that on MacOS, the python commmand is `python3`
 
 2. Clone this repository
+
+   ```bash
+   git clone --depth 1 --filter=tree:0 git@github.com:Split-Community/split_support_tools.git --branch main --single-branch python_admin_api_tool
+   ```
 
 3. Create a new virtual environment
 
    ```bash
-   $ python -m venv venv
-   $ . venv/bin/activate
+   python -m venv venv
+   source venv/bin/activate
    ```
 
 4. Install the requirements
 
    ```bash
-   $ pip install -r requirements.txt
+   pip install -r requirements.txt
    ```
 
 6. Make a copy of the example environment variables file
 
    ```bash
-   $ cp env_sample .env
+   cp env_sample .env
    ```
 
 7. Add your [Admin API key](https://help.split.io/hc/en-us/articles/360019916211-API-keys#adding-admin-api-keys) to the newly created `.env` file
+   - Note that it's recommend to use an API keys that is scoped across all environments and workspaces
+   - If the the environment/workspace has access restrictions, you might encounter an error.
 
 8. Run the tool
 
    ```bash
-   $ python admin_api_tool.py
+   python admin_api_tool.py
+   
+   or python3 admin_api_tool.py on MacOS
    ```
 
+## Caching
+- To reduce API calls and improve response time, the script caches all data on the first run. This may take up to 30-40 seconds. This is needed only on the first run or when updating the cache.
+
+- If you make changes to your Splits, it's recommended that you update the cache using the "Update Cache" option.
 
 ## Usage:
-
-- The menu is straight forward with the options. There are 4 choices: Search, List, Export, and Operations.
+- The menu is straight forward with the options. There are 5 choices: Search, List, Export,Operations, and Update Cache.
 
 - The Search options are:
 
@@ -89,13 +101,13 @@ This is a simple python tool utilizing the Split's [Python PyPi library for Spli
    - This will export all groups and the users in each group.
 
 2. Export Segments
-   - This will export all segments across all workspaces and environments as well as the corresponding keys. Note that depending on how many segments you have, how many keys in each segment, this can take a few minutes to run.
+   - This will export all segments across all workspaces and environments as well as the corresponding keys.
 
 3. Export Splits
    - This will export all Splits (not the definitions) across all workspaces and environments.
 
 4. Export Split Definitions
-   - This will export all Splits definitions across all workspaces and environments. Note that depending on how many splits you have this can take a few minutes to run.
+   - This will export all Splits definitions across all workspaces and environments.
 
 5. Export Users
    - This will export all ACTIVE users (cannot export inactive users).
@@ -114,6 +126,8 @@ This is a simple python tool utilizing the Split's [Python PyPi library for Spli
 1. Delete Splits
    - This will forcefully delete the Split in the workspace you specified, regardless of the definitions. Note that this is not reversable!
 ```
+
+- The Update Cache option is as the name implies.
 
 ## Additional tool
 You can use the provided `convert_json_csv.py` to convert your json files to csv. Simply run
