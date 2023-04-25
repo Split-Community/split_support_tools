@@ -6,6 +6,13 @@ This is a simple python tool utilizing the Split's [Python PyPi library for Spli
 
 1. If you don’t have Python 3 installed, [install it from here](https://www.python.org/downloads/)
    - Please note that on MacOS, the python commmand is `python3`
+   - You can run the following command to create the alias for python
+      ```
+      echo "alias python=python3\nalias pip=pip3" >> ~/.zprofile
+
+      source ~/.zprofile
+      ```
+   - Now your `python` command on the mac will run python3.
 
 2. Clone this repository and go into it
 
@@ -19,6 +26,7 @@ This is a simple python tool utilizing the Split's [Python PyPi library for Spli
 
    ```bash
    python -m venv venv
+
    source venv/bin/activate
    ```
 
