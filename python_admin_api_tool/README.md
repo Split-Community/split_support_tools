@@ -115,27 +115,29 @@ This is a simple python tool utilizing the Split's [Python PyPi library for Spli
 - Similarly, the Export options are straightforward. By default, all exports are json format. Please also see Additional tool for info.
 
 ```
-1. Export Groups
-   - This will export all groups and the users in each group.
-
-2. Export Segments Definitions
-   - This will export all segments definitions across all workspaces and environments.
-
-3. Export Splits
-   - This will export all Splits (not the definitions) across all workspaces and environments.
-
-4. Export Split Definitions
-   - This will export all Splits definitions across all workspaces and environments.
-
-5. Export Users
-   - This will export all the users and their statuses, as well as group memberships.
-
-6. Export Workspaces
-   - This will export all workspaces in your org.
-
-7. Export Environments
+1. Export Environments
    - This will export all environments across all workspaces.
 
+2. Export Groups
+   - This will export all groups and the users in each group.
+
+3. Export Segments Definitions
+   - This will export all segments definitions across all workspaces and environments.
+
+4. Export Segments Keys
+   - This will let user choose the workspace, environement, the segment, and export all the keys.
+
+5. Export Split Definitions
+   - This will export all Splits definitions across all workspaces and environments.
+
+6. Export Splits
+   - This will export all Splits (not the definitions) across all workspaces and environments.
+   
+7. Export Users
+   - This will export all the users and their statuses, as well as group memberships.
+
+8. Export Workspaces
+   - This will export all workspaces in your org.
 ```
 
 - The Operations are options that will mutate or change your splits/segments/workspaces/environments. More options will be added over time.
