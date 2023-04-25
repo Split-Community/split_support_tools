@@ -214,6 +214,7 @@ def search_segments():
                                 file_name = f"{segment_name}.{chosen_environment_name}.{chosen_workspace_name}"
                                 segDef = client.segment_definitions.find(segment_name, chosen_environment_id, chosen_workspace_id)
                                 segDef.export_keys_to_csv(f"{file_name}.csv")
+                                print(f"The keys have been exported to {file_name}")
                             break
                 else:
                     break

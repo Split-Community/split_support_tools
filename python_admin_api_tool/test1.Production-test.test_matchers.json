@@ -1,0 +1,26 @@
+[
+    {
+        "type": "IN_LIST_STRING",
+        "strings": [
+            "list1",
+            "list2",
+            "list3",
+            "list4",
+            "list5",
+            "list6",
+            "list7"
+        ]
+    },
+    {
+        "type": "IN_LIST_STRING",
+        "strings": [
+            "test1",
+            "test2",
+            "test3",
+            "test4",
+            "test5",
+            "test6",
+            "test7"
+        ]
+    }
+]

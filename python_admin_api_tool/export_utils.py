@@ -28,6 +28,7 @@ def export_treatment_keys_to_csv(treatments, file_name):
         writer.writerow(["keys"])
         for key in keys:
             writer.writerow([key])
+    print(f"Split treatment rules exported to csv successfully!")
 
 def export_matcher_type_and_strings_to_csv(rules, file_name):
     """
@@ -55,6 +56,7 @@ def export_matcher_type_and_strings_to_csv(rules, file_name):
                 strings = type_and_string["strings"]
                 row.append(strings[row_idx] if row_idx < len(strings) else '')
             csv_writer.writerow(row)
+    print(f"Split treatment rules exported to csv successfully!")
 
 def export_split_definition_to_json(split_data, file_name):
     with open(file_name, "w") as file:
@@ -87,6 +89,8 @@ def export_treatment_keys_to_json(treatments, file_name):
             break
     with open(file_name, "w") as file:
         file.write(json.dumps(keys, indent=4))
+    print(f"Split treatment keys exported successfully!")
+
     
 def export_matcher_type_and_strings_to_json(rules, file_name):
     type_and_strings = []
@@ -95,11 +99,13 @@ def export_matcher_type_and_strings_to_json(rules, file_name):
             type_and_strings.append({"type": matcher["type"], "strings": matcher["strings"]})
     with open(file_name, "w") as file:
         file.write(json.dumps(type_and_strings, indent=4))
+        print(f"Split treatment rules exported to json successfully!")
 
 def export_data_to_json(data_type, data_getter):
     data = data_getter()
     with open(data_type + "_data" + ".json", "w") as file:
         file.write(json.dumps(data, indent=4))
+
 
 def export_data(data_type, data_getter):
     """
