@@ -624,6 +624,7 @@ def export_segments_keys():
                         file_name = f"segment-{source_segment_name}.{source_environment_name}.{source_ws_name}"
                         segDef = client.segment_definitions.find(segment_name, source_env_id, source_ws_id)
                         segDef.export_keys_to_csv(f"{file_name}_keys.csv")
+                        print(f"keys are exported to {file_name}_keys.csv")
                         updated = True
                         break
     except Exception as e:
