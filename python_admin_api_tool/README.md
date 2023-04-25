@@ -10,9 +10,9 @@ This is a simple python tool utilizing the Split's [Python PyPi library for Spli
 2. Clone this repository and go into it
 
    ```bash
-   git clone --depth 1 --filter=tree:0 git@github.com:Split-Community/split_support_tools.git --branch main --single-branch python_admin_api_tool
+   git clone git@github.com:Split-Community/split_support_tools.git
 
-   cd python_admin_api_tool/
+   cd split_support_tools/python_admin_api_tool/
    ```
 
 3. Create a new virtual environment
