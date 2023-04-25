@@ -50,12 +50,12 @@ This is a simple python tool utilizing the Split's [Python PyPi library for Spli
    ```
 
 ## Caching
-- To reduce API calls and improve response time, the script caches all data on the first run. This may take up to 30-40 seconds. This is needed only on the first run or when updating the cache.
+- To reduce API calls and improve response time, the script caches split definitions and segments definitions on the first run if there is no cache data, other data will be cached on the first use.
 
 - If you make changes to your Splits, it's recommended that you update the cache using the "Update Cache" option.
 
 ## Usage:
-- The menu is straight forward with the options. There are 5 choices: Search, List, Export,Operations, and Update Cache.
+- The menu is straight forward with the options. There are 5 choices: Search, List, Export, Operations, and Update Cache.
 
 - The Search options are:
 
@@ -70,11 +70,16 @@ This is a simple python tool utilizing the Split's [Python PyPi library for Spli
    - Requires the email of the users being searched. Will show information of the user and which group they are in.
 
 4. Search Splits
-   - This will search for all splits of the same name across all workspaces and environments. Also a sub-option to show all the definitions of the Split.
+   - This will search for all splits of the same name across all workspaces and environments. 
+   - When a split is found, the user can choose to export the following:
+      * This split's definition from a specific environment to json
+      * The treatment keys to csv
+      * The list of the targeting rules csv
 
 5. Search Segments
    - This will search for all segments of the same name across all workspaces and environments, and will also display all the keys of the segments.
-
+   - When a segment is found, the user can choose to export the following:
+      * The segment keys to csv
 ```
 
 - The List options are self-explanatory. Note that these do not show the full details (such as Split's definitions or segment keys), please use the Export functions to get the full data.
@@ -90,13 +95,13 @@ This is a simple python tool utilizing the Split's [Python PyPi library for Spli
    - List all the groups, will not show list of users.
 
 4. List All Segments
-   - List all the segments for all environments and workspaces, will not show the segment keys.
+   - List all the segments and keys of each for all environments and workspaces.
 
 5. List All Splits
-   - List all the splits across all workspaces, will not show split's definitions.
+   - List all the splits across all workspaces, will not show split's definitions (use the export option for the definitions).
 
 6. List All Users
-   - List all active users.
+   - List all users and their statuses.
 ```
 
 - Similarly, the Export options are straightforward. By default, all exports are json format. Please also see Additional tool for info.
@@ -105,8 +110,8 @@ This is a simple python tool utilizing the Split's [Python PyPi library for Spli
 1. Export Groups
    - This will export all groups and the users in each group.
 
-2. Export Segments
-   - This will export all segments across all workspaces and environments as well as the corresponding keys.
+2. Export Segments Definitions
+   - This will export all segments definitions across all workspaces and environments.
 
 3. Export Splits
    - This will export all Splits (not the definitions) across all workspaces and environments.
@@ -115,7 +120,7 @@ This is a simple python tool utilizing the Split's [Python PyPi library for Spli
    - This will export all Splits definitions across all workspaces and environments.
 
 5. Export Users
-   - This will export all ACTIVE users (cannot export inactive users).
+   - This will export all the users and their statuses, as well as group memberships.
 
 6. Export Workspaces
    - This will export all workspaces in your org.
@@ -125,14 +130,42 @@ This is a simple python tool utilizing the Split's [Python PyPi library for Spli
 
 ```
 
-- The Operations are options that will mutate or change your splits/workspaces/environments. More options will be added over time
+- The Operations are options that will mutate or change your splits/segments/workspaces/environments. More options will be added over time.
 
 ```
-1. Delete Splits
+1. Copy Segment Definitions
+   - This allows for copying the keys of segment to another segment. Users can choose from available lists of workspaces, environments, and segments to copy.
+
+2. Copy Split Definitions
+   - This allows for copying the keys of segment to another segment. Users can choose from available lists of workspaces, environments, and segments to copy.
+
+3. Delete Groups
+   - This will forcefully delete the group in the workspace you specified, regardless of the definitions. Note that this is not reversable!
+
+4. Delete Segments
+   - This will forcefully delete the segment in the workspace you specified, regardless of the definitions. Note that this is not reversable!
+
+5. Delete Splits
    - This will forcefully delete the Split in the workspace you specified, regardless of the definitions. Note that this is not reversable!
+
+6. Main Menu
+
+7. Quit Tool
 ```
 
-- The Update Cache option is as the name implies.
+- The Update Cache option
+
+```
+It's recommended to run this option after you have made changes to the splits to ensure the latest data.
+```
+
+## DEBUG Logging:
+If you run into issues, you can run the script with debug logging enabled for better troubleshotting:
+
+```bash
+python admin_tool.py --debug
+```
+
 
 ## Additional tool
 You can use the provided `convert_json_csv.py` to convert your json files to csv. Simply run
@@ -143,3 +176,8 @@ python convert_json_csv.py
 
 In the same directory of your json files.
 
+
+## Additional notes:
+The admin tool will not work properly for workspaces that require approval or have access restriction. 
+
+When that happens, you either have to manually do the edit, or you have to make sure the API key you are using has proper access and temporarily disables the approval so the tool can work.

@@ -375,6 +375,28 @@ def get_split_definitions(environment_id, workspace_id, workspace_name):
     cache_utils.save_cache()
     return definitions
 
+def get_all_splits_definitions():
+    if cache.cache_data["all_splits_definitions"]:
+        return cache.cache_data["all_splits_definitions"]
+
+    workspaces = get_workspaces()
+    definitions = {}
+
+    total_environments = sum(len(client.environments.list(workspace_id)) for workspace_id in workspaces)
+
+    with tqdm(total=total_environments, desc="Fetching split definitions", ncols=100) as pbar:
+        for workspace_id, workspace_name in workspaces.items():
+            for env in client.environments.list(workspace_id):
+                split_definitions = get_split_definitions(env.id, workspace_id, workspace_name).values()
+                for split_definition in split_definitions:
+                    split_key = f"{split_definition['name']}.{env.id}.{workspace_id}"
+                    definitions[split_key] = split_definition
+                pbar.update(1)
+
+    cache.cache_data["all_splits_definitions"] = definitions
+    cache_utils.save_cache()
+    return definitions
+
 def get_all_splits_definitions_bk():
     """
     Get all Split definitions across all workspaces and environments.
@@ -397,28 +419,6 @@ def get_all_splits_definitions_bk():
                 #split_definitions = get_split_definitions(env.id, workspace_id, workspace_name)
                 split_definitions = get_split_definitions(env.id, workspace_id, workspace_name).values()
                 for split_key, split_definition in split_definitions:
-                    definitions[split_key] = split_definition
-                pbar.update(1)
-
-    cache.cache_data["all_splits_definitions"] = definitions
-    cache_utils.save_cache()
-    return definitions
-
-def get_all_splits_definitions():
-    if cache.cache_data["all_splits_definitions"]:
-        return cache.cache_data["all_splits_definitions"]
-
-    workspaces = get_workspaces()
-    definitions = {}
-
-    total_environments = sum(len(client.environments.list(workspace_id)) for workspace_id in workspaces)
-
-    with tqdm(total=total_environments, desc="Fetching split definitions", ncols=100) as pbar:
-        for workspace_id, workspace_name in workspaces.items():
-            for env in client.environments.list(workspace_id):
-                split_definitions = get_split_definitions(env.id, workspace_id, workspace_name).values()
-                for split_definition in split_definitions:
-                    split_key = f"{split_definition['name']}.{env.id}.{workspace_id}"
                     definitions[split_key] = split_definition
                 pbar.update(1)
 
