@@ -5,10 +5,12 @@ cache_data = {
     "environments_data": None,
     "groups": None,
     "segments": None,
+    "segments_definitions" : None,
+    "all_segments_definitions" : None,
     "splits": None,
     "splits_definitions": {},
+    "all_splits_definitions": None,
     "users": None,
-    "all_splits_definitions": None
 }
 
 def default_cache_data():
@@ -19,8 +21,10 @@ def default_cache_data():
         "environments_data": None,
         "groups": None,
         "segments": None,
+        "segments_definitions" : None,
+        "all_segments_definitions" : None,
         "splits": None,
         "splits_definitions": {},
+        "all_splits_definitions": None,
         "users": None,
-        "all_splits_definitions": None
     }

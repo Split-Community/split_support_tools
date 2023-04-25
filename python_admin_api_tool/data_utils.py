@@ -1,6 +1,8 @@
 import os
 import cache 
 import cache_utils
+import logging
+from tqdm import tqdm
 from dotenv import load_dotenv
 from splitapiclient.main import get_client
 
@@ -10,6 +12,14 @@ API_KEY = os.environ.get("ADMIN_API_KEY")
 # Initialize the client connection
 
 client = get_client({'apikey': API_KEY})
+
+logger = logging.getLogger(__name__)
+
+def configure_logging(debug=False):
+    if debug:
+        logger.setLevel(logging.DEBUG)
+    else:
+        logger.setLevel(logging.WARNING)
 
 def get_workspaces():
     """
@@ -50,6 +60,34 @@ def get_workspace_data():
         cache.cache_data["workspace_data"] = workspace_data
         cache_utils.save_cache()
         return workspace_data
+    
+def get_environments():
+    """
+    Retrieve a dictionary of environment data
+
+    Returns:
+        dict: A dictionary of environment name, id, and workspace.
+    """
+    if cache.cache_data["environments"] is None:
+        environments = {}
+        workspaces = get_workspaces()
+        total_workspaces = len(workspaces)
+
+        with tqdm(total=total_workspaces, desc="Fetching environments", ncols=100) as pbar:
+            for ws_id, ws_name in workspaces.items():
+                for env in client.environments.list(ws_id):
+                    environments[env.id] = {
+                        "name": env.name,
+                        "workspace": ws_name
+                    }
+                pbar.update(1)
+
+        cache.cache_data["environments"] = environments
+        cache_utils.save_cache()
+    else:
+        environments = cache.cache_data["environments"]
+
+    return environments
 
 def get_environments_data():
     """
@@ -65,30 +103,29 @@ def get_environments_data():
     
     all_envs = {}
     workspaces = get_workspaces()
-    for ws_id, ws_name in workspaces.items():
+    for ws_id, ws_name in tqdm(workspaces.items(), desc="Fetching environments", ncols=100, leave=False):
         environments = client.environments.list(ws_id)
         envs_for_ws = {}
         for env in environments:
             env_dict = {
-                'Workspace ID': ws_id,
-                'Workspace Name': ws_name,
-                'Creation Time': env._creationTime,
-                'Production': env._production,
-                'Data Export Permissions': {},
-                'Environment Type': env._type,
-                'Name': env._name,
-                'Change Permissions': {},
-                'ID': env._id,
-                'Org Id': env._orgId,
+                'workspaceId': env._workspace_id,
+                'WorkspaceName': ws_name,
+                'creationTime': env._creationTime,
+                'production': env._production,
+                'dataExportPermissions': {},
+                'environmentType': env._type,
+                'name': env._name,
+                'changePermissions': {},
+                'id': env._id,
                 'status': env._status
             }
             if env._dataExportPermissions:
-                env_dict['Data Export Permissions'] = {
+                env_dict['dataExportPermissions'] = {
                     'areExportersRestricted': env._dataExportPermissions.get('areExportersRestricted'),
                     'exporters': env._dataExportPermissions.get('exporters', [])
                 }
             if env._changePermissions:
-                env_dict['Change Permissions'] = {
+                env_dict['changePermissions'] = {
                     'areApproversRestricted': env._changePermissions.get('areApproversRestricted'),
                     'allowKills': env._changePermissions.get('allowKills'),
                     'areEditorsRestricted': env._changePermissions.get('areEditorsRestricted'),
@@ -103,71 +140,93 @@ def get_environments_data():
     cache_utils.save_cache()
     return all_envs
 
-def get_environments():
+def get_segments():
     """
-    Retrieve a dictionary of environment data
+    Get all segments in all environments across all workspaces.
 
     Returns:
-        dict: A dictionary of environment name, id, and workspace.
+        A dictionary containing all segments, grouped by workspace.
     """
-    if cache.cache_data["environments"] is None:
-        environments = {}
-        for ws_id, ws_name in get_workspaces().items():
-            for env in client.environments.list(ws_id):
-                environments[env.id] = {
-                    "Name": env.name,
-                    "Workspace Name": ws_name
-                }
-        cache.cache_data["environments"] = environments
-        cache_utils.save_cache() 
-    else:
-        environments = cache.cache_data["environments"]
-    return environments
-
-def get_segments(include_keys=True):
-    """
-    Get data for all segments in all environments across all workspaces.
-
-    Args:
-        include_keys (bool): Whether to include the segment keys or not. Defaults to True.
-
-    Returns:
-        A dictionary containing information on all segments, grouped by segment name and environment.
-    """
-
     if cache.cache_data['segments'] is not None:
         return cache.cache_data['segments']
 
     segments_data = {}
 
-    for workspace_id, workspace_name in get_workspaces().items():
-        for env in client.environments.list(workspace_id):
-            for segDef in client.segment_definitions.list(env.id, workspace_id):
-                segment_info = {
-                    "Segment Name": segDef.name,
-                    "Environment": {
-                        "ID": env.id,
-                        "Name": env._name
-                    },
-                    "Workspace": {
-                        "ID": workspace_id,
-                        "Name": workspace_name
-                    },
-                    "Traffic Type": {
-                        "ID": segDef._trafficType._id,
-                        "Name": segDef._trafficType._name
-                    },
-                    "Creation Time": segDef._creationTime
-                }
+    for workspace_id, workspace_name in tqdm(get_workspaces().items(), desc="Fetching segments", ncols=100, leave=False):
+        if workspace_name not in segments_data:
+            segments_data[workspace_name] = {}
 
-                if include_keys:
-                    segment_info["Keys"] = client.segment_definitions.find(segDef.name, env.id, workspace_id).get_keys()
-
-                segments_data[f"Segment: {segDef.name} in Environment: {env._name}"] = segment_info
+        for segment in client.segments.list(workspace_id):
+            segment_info = {
+                "name": segment.name,
+                "description": segment.description,
+                "trafficType": {
+                    "id": segment._trafficType.id,
+                    "name": segment._trafficType.name
+                },
+                "tags": [{"name": tag_name} for tag_name in (segment._tags if segment._tags is not None else [])],
+                "creationTime": segment._creationTime
+            }
+            segments_data[workspace_name][segment.name] = segment_info
 
     cache.cache_data['segments'] = segments_data
-
     return segments_data
+
+def get_segment_definitions(environment_id, workspace_id, environment_name, workspace_name):
+    if cache.cache_data["segments_definitions"] is None:
+        cache.cache_data["segments_definitions"] = {}
+        
+    cache_key = f"{workspace_name}:{environment_id}"
+    if cache.cache_data["segments_definitions"].get(workspace_name, {}).get(cache_key):
+        return cache.cache_data["segments_definitions"][workspace_name][cache_key]
+
+    definitions = {}
+    for segDef in client.segment_definitions.list(environment_id, workspace_id):
+        segment_info = {
+            "name": segDef.name,
+            "environment": {
+                "id": environment_id,
+                "name": environment_name
+            },
+            "workspace": {
+                "id": workspace_id,
+                "name": workspace_name
+            },
+            "trafficType": {
+                "id": segDef._trafficType._id,
+                "name": segDef._trafficType._name
+            },
+            "creationTime": segDef._creationTime
+        }
+
+        segment_info["keys"] = client.segment_definitions.find(segDef.name, environment_id, workspace_id).get_keys()
+
+        definitions[f"{segDef.name}.{environment_id}.{workspace_id}"] = segment_info
+
+    cache.cache_data["segments_definitions"].setdefault(workspace_name, {}).setdefault(cache_key, definitions)
+    cache_utils.save_cache()
+    return definitions
+
+def get_all_segments_definitions():
+    if cache.cache_data["all_segments_definitions"]:
+        return cache.cache_data["all_segments_definitions"]
+
+    workspaces = get_workspaces()
+    definitions = {}
+
+    total_environments = sum(len(client.environments.list(workspace_id)) for workspace_id in workspaces)
+
+    with tqdm(total=total_environments, desc="Fetching segment definitions", ncols=100) as pbar:
+        for workspace_id, workspace_name in workspaces.items():
+            for env in client.environments.list(workspace_id):
+                segment_definitions = get_segment_definitions(env.id, workspace_id, env.name, workspace_name)
+                for segment_key, segment_definition in segment_definitions.items():
+                    definitions[segment_key] = segment_definition
+                pbar.update(1)
+
+    cache.cache_data["all_segments_definitions"] = definitions
+    cache_utils.save_cache()
+    return definitions
 
 def get_groups():
     """
@@ -199,23 +258,25 @@ def get_all_users():
     
     groups_dict = get_groups()
     users = {}
-
-    for user in client.users.list("ACTIVE"):
-        user_data = {
-            "Type": user._type,
-            "Name": user._name,
-            "Email": user.email,
-            "Status": user._status,
-            "Groups": [
-                {
-                    "type": group["type"],
-                    "ID": group["id"],
-                    "Name": groups_dict[group["id"]]
-                }
-                for group in user._groups
-            ]
-        }
-        users[user._name] = user_data
+    statuses = ["ACTIVE", "DEACTIVATED", "PENDING"]
+    for status in tqdm(statuses, desc="Fetching users", ncols=100, leave=False):
+        for user in client.users.list(status):
+            user_data = {
+                "Type": user._type,
+                "Name": user._name,
+                "Email": user.email,
+                "Status": user._status,
+                "ID" : user._id,
+                "Groups": [
+                    {
+                        "type": group["type"],
+                        "ID": group["id"],
+                        "Name": groups_dict[group["id"]]
+                    }
+                    for group in user._groups
+                ]
+            }
+            users[user._name] = user_data
     
     cache.cache_data["users"] = users
     cache_utils.save_cache()
@@ -242,7 +303,7 @@ def get_groups_users():
         groups_data[group_name] = {"Group": group_name, "Users": group_users}
     cache_utils.save_cache()
     return groups_data
-    
+
 def get_splits():
     """
     Get data for all splits across all workspaces.
@@ -250,29 +311,20 @@ def get_splits():
     Returns:
         A dictionary containing information on all splits, grouped by split name.
     """
-    #global cache.cache_data
     if cache.cache_data["splits"]:
         return cache.cache_data["splits"]
     else:
         workspaces = get_workspaces()
         splits = {}
-        for workspace_id, workspace_name in workspaces.items():
+        for workspace_id, workspace_name in tqdm(workspaces.items(), desc="Fetching splits", ncols=100, leave=False):
             for split in client.splits.list(workspace_id):
-                split_data = {
-                    "Workspace Name": workspace_name,
-                    "Workspace ID": workspace_id,
-                    "ID": split.id,
-                    "Name": split.name,
-                    "Description": split.description,
-                    "Traffic Type ID": split._trafficType._id,
-                    "Traffic Type Name": split._trafficType.name,
-                    "Creation Time": split._creationTime,
-                    "Rollout Status ID": split._rolloutStatus['id'],
-                    "Rollout Status Name": split._rolloutStatus['name'],
-                    "Rollout Status Timestamp": split._rolloutStatusTimestamp,
-                    "Tags": split._tags,
-                    "Owners": split._owners,
-                }
+                split_data = split.to_dict()
+                split_data["rolloutStatus"] = split._rolloutStatus
+                split_data["trafficType"] = split._trafficType.to_dict()
+                split_data["tags"] = split._tags
+                split_data["owners"] = split._owners
+                split_data["workspace_id"] = workspace_id
+                split_data["workspace_name"] = workspace_name
                 if split.name not in splits:
                     splits[split.name] = [split_data]
                 else:
@@ -281,80 +333,7 @@ def get_splits():
         cache_utils.save_cache()
         return splits
 
-def get_split_definition(environment_id, workspace_id, split_def):
-    """
-    Return a dictionary containing detailed information about a split definition.
-
-    Args:
-        environment_id (str): The ID of the environment.
-        workspace_id (str): The ID of the workspace.
-        split_def: The split definition object.
-
-    Returns:
-        A dictionary containing detailed information about the split definition, including its name,
-        environment, traffic type, treatments, rules, default rules, and other metadata.
-
-    """
-    cache_key = f"split_def:{environment_id}:{workspace_id}:{split_def.id}"
-    if cache.cache_data["splits_definitions"] is None:
-        cache.cache_data["splits_definitions"] = {}
-    if cache_key in cache.cache_data["splits_definitions"]:
-        return cache.cache_data["splits_definitions"][cache_key]
-    
-    workspaces = get_workspaces()
-    data = {
-        "Workspace Name" :workspaces[workspace_id],
-        "Name": split_def.name,
-        "environment": {
-            "ID" : split_def._environment.id,
-            "Name" : split_def._environment.name
-        },
-        "trafficType": {
-            "ID": split_def._trafficType.id,
-            "Name": split_def._trafficType.name
-        },
-        "killed": split_def._killed,
-        "treatments": [{"Name": t._name, "configurations": t._configurations,
-                        "description": t._description, 
-                        "keys": t._keys, "segments": t._segments} 
-                        for t in split_def._treatments],
-        "defaultTreatment": split_def._default_treatment,
-        "baselineTreatment": split_def._baseline_treatment,
-        "trafficAllocation": split_def._traffic_allocation,
-        "rules": [{
-            "condition": {
-                "combiner": rule._condition["combiner"],
-                "matchers": [{
-                    "negate": matcher.get('negate', False),
-                    "type": matcher.get('type', False),
-                    "attribute": matcher.get('attribute', False),
-                    "string": matcher.get('string', False),
-                    "bool": matcher.get('bool', False),
-                    "strings": matcher.get('strings', False),
-                    "number": matcher.get('number', False),
-                    "date": matcher.get('date', False),
-                    "between": matcher.get('between', False),
-                    "depends": matcher.get('depends', False),
-                } for matcher in rule._condition["matchers"]]
-            },
-            "buckets": [{
-                "treatment": bucket.get('treatment', False),
-                "size": bucket.get('size', False)
-            } for bucket in rule._buckets]
-        } for rule in split_def._rules],
-        "defaultRule": [{
-            "treatment": default_rule._treatment,
-            "size": default_rule._size
-        } for default_rule in split_def._default_rule],
-        "creationTime": split_def._creationTime,
-        "lastUpdateTime": split_def._lastUpdateTime
-    }
-
-    cache.cache_data["splits_definitions"][cache_key] = data
-    cache_utils.save_cache()
-    return data
-
-def get_split_definitions(environment_id, workspace_id):
+def get_split_definitions(environment_id, workspace_id, workspace_name):
     """
     Get data for all Split definitions in a specific environment and workspace.
 
@@ -367,23 +346,36 @@ def get_split_definitions(environment_id, workspace_id):
         Each Split definition contains data on the definition's treatments, rules, and other attributes.
 
     """
-    cache_key = f"split_defs:{environment_id}:{workspace_id}"
+    cache_key = f"{workspace_name}:{environment_id}"
+    #if cache.cache_data["splits_definitions"].get(workspace_name, {}).get(cache_key):
+        #return cache.cache_data["splits_definitions"][workspace_name][cache_key]
     if cache.cache_data["splits_definitions"].get(cache_key):
         return cache.cache_data["splits_definitions"][cache_key]
 
     definitions = {}
     for split_def in client.split_definitions.list(environment_id, workspace_id):
         split_name = split_def.name
-        if split_name not in definitions:
-            definitions[split_name] = [get_split_definition(environment_id, workspace_id, split_def)]
-        else:
-            definitions[split_name].append(get_split_definition(environment_id, workspace_id, split_def))
-    cache.cache_data["splits_definitions"].setdefault(cache_key, definitions)
+        data = split_def.to_dict()
+        data["workspace"] = workspace_name
+        data["rules"] = [rule.export_dict() for rule in split_def._rules]
+        data["defaultRule"] = [def_rule.export_dict() for def_rule in split_def._default_rule]
+        data["treatments"] = [treatment.export_dict() for treatment in split_def._treatments]
+        data["killed"] = split_def._killed
+        data["defaultTreatment"] = split_def._default_treatment
+        data["baselineTreatment"] = split_def._baseline_treatment
+        data["trafficAllocation"] = split_def._traffic_allocation
+        data["environment"] = {"id": split_def._environment.id, "name": split_def._environment.name}
+        data["trafficType"] = split_def._trafficType.to_dict()
+        data["creationTime"] = split_def._creationTime
+        data["lastUpdateTime"] = split_def._lastUpdateTime
+
+        definitions[f"{split_name}.{environment_id}.{workspace_id}"] = data
+    #cache.cache_data["splits_definitions"].setdefault(cache_key, definitions)
+    cache.cache_data["splits_definitions"][cache_key] = definitions
     cache_utils.save_cache()
     return definitions
 
-def get_all_splits_definitions():
-    #global cache.cache_data
+def get_all_splits_definitions_bk():
     """
     Get all Split definitions across all workspaces and environments.
 
@@ -392,18 +384,44 @@ def get_all_splits_definitions():
     """
     if cache.cache_data["all_splits_definitions"]:
         return cache.cache_data["all_splits_definitions"]
-    
+
     workspaces = get_workspaces()
-    environments = get_environments()
     definitions = {}
-    for workspace_id, workspace_name in workspaces.items():
-        for environment_id, environment_name in environments.items():
-            workspace_definitions = get_split_definitions(environment_id, workspace_id)
-            for split_name, split_definitions in workspace_definitions.items():
-                if split_name not in definitions:
-                    definitions[split_name] = split_definitions
-                else:
-                    definitions[split_name].extend(split_definitions)
+
+    #total_workspaces = len(workspaces)
+    total_environments = sum(len(client.environments.list(workspace_id)) for workspace_id in workspaces)
+
+    with tqdm(total=total_environments, desc="Fetching split definitions", ncols=100) as pbar:
+        for workspace_id, workspace_name in workspaces.items():
+            for env in client.environments.list(workspace_id):
+                #split_definitions = get_split_definitions(env.id, workspace_id, workspace_name)
+                split_definitions = get_split_definitions(env.id, workspace_id, workspace_name).values()
+                for split_key, split_definition in split_definitions:
+                    definitions[split_key] = split_definition
+                pbar.update(1)
+
+    cache.cache_data["all_splits_definitions"] = definitions
+    cache_utils.save_cache()
+    return definitions
+
+def get_all_splits_definitions():
+    if cache.cache_data["all_splits_definitions"]:
+        return cache.cache_data["all_splits_definitions"]
+
+    workspaces = get_workspaces()
+    definitions = {}
+
+    total_environments = sum(len(client.environments.list(workspace_id)) for workspace_id in workspaces)
+
+    with tqdm(total=total_environments, desc="Fetching split definitions", ncols=100) as pbar:
+        for workspace_id, workspace_name in workspaces.items():
+            for env in client.environments.list(workspace_id):
+                split_definitions = get_split_definitions(env.id, workspace_id, workspace_name).values()
+                for split_definition in split_definitions:
+                    split_key = f"{split_definition['name']}.{env.id}.{workspace_id}"
+                    definitions[split_key] = split_definition
+                pbar.update(1)
+
     cache.cache_data["all_splits_definitions"] = definitions
     cache_utils.save_cache()
     return definitions

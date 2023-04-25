@@ -1,12 +1,21 @@
-import cache_utils, export_utils, list_utils, ops_utils, search_utils, re
-from data_utils import get_all_splits_definitions, get_segments
+import logging
+logger = logging.getLogger(__name__)
 
+def configure_logging(debug=False):
+    if debug:
+        logger.setLevel(logging.DEBUG)
+    else:
+        logger.setLevel(logging.WARNING)
+
+
+import cache_utils, export_utils, list_utils, ops_utils, search_utils, re
+from data_utils import get_all_splits_definitions, get_all_segments_definitions
 
 formatted_text_cache = {}
 formatted_options_cache = {}
 
 def update_cache():
-    cache_utils.update_cache(get_all_splits_definitions, get_segments)
+    cache_utils.update_cache(get_all_splits_definitions, get_all_segments_definitions)
 
 def format_text(text):
     """
@@ -38,9 +47,10 @@ def display_options(options, menu_name):
             f"{key}. {format_text(func.__name__)}"
             for key, func in options.items()
         ]
-    print("----------------------------------------")
+    
+    print("-------------------------------------------")
     print(f"PYTHON ADMIN API TOOL - {menu_name}")
-    print("----------------------------------------")
+    print("-------------------------------------------")
     print("\n".join(formatted_options_cache[menu_name]))
 
 def get_choice(options, menu_name):
@@ -70,59 +80,76 @@ def get_choice(options, menu_name):
             cache_utils.quit_tool()
 
 def search():
-    options = {
-        "1": search_utils.search_workspaces_or_groups,
-        "2": search_utils.search_environments,
-        "3": search_utils.search_users,
-        "4": search_utils.search_splits,
-        "5": search_utils.search_segments,
-        "6": main_menu,
-        "7": cache_utils.quit_tool,
-    }
+    ops_list = [
+    search_utils.search_workspaces_or_groups,
+    search_utils.search_environments,
+    search_utils.search_users,
+    search_utils.search_splits,
+    search_utils.search_segments,
+    main_menu,
+    cache_utils.quit_tool,
+]
+    sorted_ops_list = sorted(ops_list, key=lambda func: func.__name__)
+    options = {str(idx+1): func for idx, func in enumerate(sorted_ops_list)}
     get_choice(options, "Search")
 
 def list():
-    options = {
-        "1": list_utils.list_all_workspaces,
-        "2": list_utils.list_all_environments,
-        "3": list_utils.list_all_groups,
-        "4": list_utils.list_all_segments,
-        "5": list_utils.list_all_splits,
-        "6": list_utils.list_all_users,
-        "7": main_menu,
-        "8": cache_utils.quit_tool,
-    }
+    ops_list = [
+    list_utils.list_all_workspaces,
+    list_utils.list_all_environments,
+    list_utils.list_all_groups,
+    list_utils.list_all_segments,
+    list_utils.list_all_splits,
+    list_utils.list_all_users,
+    main_menu,
+    cache_utils.quit_tool,
+]
+    sorted_ops_list = sorted(ops_list, key=lambda func: func.__name__)
+    options = {str(idx+1): func for idx, func in enumerate(sorted_ops_list)}
     get_choice(options, "List")
 
 def export_all_data():
-    options = {
-        "1": export_utils.export_groups,
-        "2": export_utils.export_segments,
-        "3": export_utils.export_splits,
-        "4": export_utils.export_split_definitions,
-        "5": export_utils.export_users,
-        "6": export_utils.export_workspaces,
-        "7": export_utils.export_environments,
-        "8": main_menu,
-        "9": cache_utils.quit_tool
-    }
+    ops_list = [
+    export_utils.export_groups,
+    export_utils.export_segments_definitions,
+    ops_utils.export_segments_keys,
+    export_utils.export_splits,
+    export_utils.export_split_definitions,
+    export_utils.export_users,
+    export_utils.export_workspaces,
+    export_utils.export_environments,
+    main_menu,
+    cache_utils.quit_tool,
+]
+    sorted_ops_list = sorted(ops_list, key=lambda func: func.__name__)
+    options = {str(idx+1): func for idx, func in enumerate(sorted_ops_list)}
     get_choice(options, "Export")
 
 def operations():
-    options = {
-        "1": ops_utils.delete_splits,
-        "2": main_menu,
-        "3": cache_utils.quit_tool
-    }
+    ops_list = [
+        ops_utils.delete_groups,
+        ops_utils.delete_splits,
+        ops_utils.delete_segments,
+        ops_utils.copy_split_definitions,
+        ops_utils.copy_segment_definitions,
+        main_menu,
+        cache_utils.quit_tool
+    ]
+    
+    sorted_ops_list = sorted(ops_list, key=lambda func: func.__name__)
+    options = {str(idx+1): func for idx, func in enumerate(sorted_ops_list)}
     get_choice(options, "Operations")
 
+
 def main_menu():
-    options = {
-        "1": search,
-        "2": list,
-        "3": export_all_data,
-        "4": operations,
-        "5": update_cache,
-        "6": cache_utils.quit_tool
-    }
+    ops_list = [
+        search, 
+        list, 
+        export_all_data,
+        operations,
+        update_cache,
+        cache_utils.quit_tool
+    ]
+    #sorted_ops_list = sorted(ops_list, key=lambda func: func.__name__)
+    options = {str(idx+1): func for idx, func in enumerate(ops_list)}
     get_choice(options, "Main")

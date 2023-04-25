@@ -1,12 +1,107 @@
 import json
 import data_utils
+import csv
+import logging
 
-def export_data_to_json(data_type, data_getter, file_name_format):
+logger = logging.getLogger(__name__)
+
+def configure_logging(debug=False):
+    if debug:
+        logger.setLevel(logging.DEBUG)
+    else:
+        logger.setLevel(logging.WARNING)\
+
+def export_treatment_keys_to_csv(treatments, file_name):
+    """
+    Exports treatment keys to CSV file.
+    Returns:
+        None
+    """
+    keys = []
+    for treatment in treatments:
+        if "keys" in treatment and treatment["keys"]:
+            keys = [key for key in treatment["keys"]]
+            break
+
+    with open(file_name, 'w', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow(["keys"])
+        for key in keys:
+            writer.writerow([key])
+
+def export_matcher_type_and_strings_to_csv(rules, file_name):
+    """
+    Exports treatment rules to CSV file.
+
+    Returns:
+        None
+    """
+    type_and_strings = []
+    for rule in rules:
+        for matcher in rule["condition"]["matchers"]:
+            type_and_strings.append({"type": matcher["type"], "strings": matcher["strings"]})
+    
+    # Find the max number of rows
+    max_rows = max([len(strings) for type_and_string in type_and_strings for strings in type_and_string["strings"]])
+
+    with open(file_name, "w", newline='') as file:
+        csv_writer = csv.writer(file)
+        # Write header
+        headers = [f"{type_and_string['type']}_{idx}" for idx, type_and_string in enumerate(type_and_strings)]
+        csv_writer.writerow(headers)
+        for row_idx in range(max_rows):
+            row = []
+            for type_and_string in type_and_strings:
+                strings = type_and_string["strings"]
+                row.append(strings[row_idx] if row_idx < len(strings) else '')
+            csv_writer.writerow(row)
+
+def export_split_definition_to_json(split_data, file_name):
+    with open(file_name, "w") as file:
+        file.write(json.dumps(split_data, indent=4))
+
+def export_specific_split_definition(split_data):
+    """
+    Exports a specific split definition to a JSON file.
+
+    Args:
+        split_data (dict): The split definition data to be exported.
+
+    Returns:
+        None
+    """
+    split_name = split_data["name"]
+    environment_name = split_data["environment"]["name"]
+    workspace_name = split_data["workspace"]
+    file_name = f"{split_name}.{environment_name}.{workspace_name}.json"
+
+    print("Exporting split definition, please wait...")
+    export_split_definition_to_json(split_data, file_name)
+    print(f"Split definition for {split_name} in environment {environment_name} and workspace {workspace_name} exported successfully!")
+
+def export_treatment_keys_to_json(treatments, file_name):
+    keys = []
+    for treatment in treatments:
+        if "keys" in treatment and treatment["keys"]:
+            keys = [key for key in treatment["keys"]]
+            break
+    with open(file_name, "w") as file:
+        file.write(json.dumps(keys, indent=4))
+    
+def export_matcher_type_and_strings_to_json(rules, file_name):
+    type_and_strings = []
+    for rule in rules:
+        for matcher in rule["condition"]["matchers"]:
+            type_and_strings.append({"type": matcher["type"], "strings": matcher["strings"]})
+    with open(file_name, "w") as file:
+        file.write(json.dumps(type_and_strings, indent=4))
+
+def export_data_to_json(data_type, data_getter):
     data = data_getter()
     with open(data_type + "_data" + ".json", "w") as file:
         file.write(json.dumps(data, indent=4))
 
-def export_data(data_type, data_getter, file_name_format=None):
+def export_data(data_type, data_getter):
     """
     Exports data to a JSON file with the given filename and displays a success message.
 
@@ -19,7 +114,7 @@ def export_data(data_type, data_getter, file_name_format=None):
         None
     """
     print("Exporting data, please wait...")
-    export_data_to_json(data_type, data_getter, file_name_format)
+    export_data_to_json(data_type, data_getter)
     print(f"{data_type} data exported successfully!")
 
 def export_splits():
@@ -29,7 +124,7 @@ def export_splits():
     Returns:
         Output to stdout
     """
-    export_data("splits", data_utils.get_splits, "{0}_splits")
+    export_data("splits", data_utils.get_splits)
 
 def export_users():
     """
@@ -38,7 +133,7 @@ def export_users():
     Returns:
         Output to stdout
     """
-    export_data("users", data_utils.get_all_users, "{0}_users")
+    export_data("users", data_utils.get_all_users)
 
 def export_workspaces():
     """
@@ -47,16 +142,16 @@ def export_workspaces():
     Returns:
         Output to stdout
     """
-    export_data("workspaces", data_utils.get_workspace_data, "{0}_workspaces")
+    export_data("workspaces", data_utils.get_workspace_data)
 
-def export_segments():
+def export_segments_definitions():
     """
     Export all segment data as a JSON file with the name "segments_data.json" to the current working directory.
 
     Returns:
         Output to stdout
     """
-    export_data("segments", data_utils.get_segments, "{0}_segments")
+    export_data("segments_definitions", data_utils.get_all_segments_definitions)
 
 def export_groups():
     """
@@ -65,7 +160,7 @@ def export_groups():
     Returns:
         Output to stdout
     """
-    export_data("groups", data_utils.get_groups_users, "{0}_groups")
+    export_data("groups", data_utils.get_groups_users)
 
 def export_environments():
     """
@@ -74,7 +169,7 @@ def export_environments():
     Returns:
         Output to stdout
     """
-    export_data("environments", data_utils.get_environments_data, "{0}_environments")
+    export_data("environments", data_utils.get_environments_data)
 
 def export_split_definitions():
     """
@@ -84,4 +179,4 @@ def export_split_definitions():
     Returns:
         Output to stdout
     """
-    export_data("split_definitions", data_utils.get_all_splits_definitions, "{0}_split_definitions")
+    export_data("split_definitions", data_utils.get_all_splits_definitions)
