@@ -9,7 +9,7 @@ def configure_logging(debug=False):
     if debug:
         logger.setLevel(logging.DEBUG)
     else:
-        logger.setLevel(logging.WARNING)\
+        logger.setLevel(logging.WARNING)
 
 def export_treatment_keys_to_csv(treatments, file_name):
     """
