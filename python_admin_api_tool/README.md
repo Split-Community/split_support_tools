@@ -173,7 +173,7 @@ It's recommended to run this option after you have made changes to the splits to
 If you run into issues, you can run the script with debug logging enabled for better troubleshotting:
 
 ```bash
-python admin_tool.py --debug
+python admin_api_tool.py --debug
 ```
 
 
