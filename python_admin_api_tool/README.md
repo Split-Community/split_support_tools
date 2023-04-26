@@ -67,7 +67,7 @@ python3 admin_api_tool.py
 ## Caching
 - To reduce API calls and improve response time, the script caches feature flag definitions and segments definitions on the first run if there is no cache data. Other data will be cached on the first use.
 
-### Note: If you make changes to your feature flags, it's recommended that you update the cache using the Update Cache option.
+#### Note: If you make changes to your feature flags, it's recommended that you update the cache using the Update Cache option.
 
 ## Usage:
 The menu is straightforward with the options. There are 5 choices: 
@@ -103,6 +103,7 @@ The menu is straightforward with the options. There are 5 choices:
       * The segment keys to csv
 ```
 
+## List
 - The List options are self-explanatory. Note that these do not show the full details (such as feature flag definitions or segment keys), please use the Export functions to get the full data.
 
 ```
@@ -125,7 +126,10 @@ The menu is straightforward with the options. There are 5 choices:
    - List all users and their statuses.
 ```
 
-- Similarly, the Export options are straightforward. By default, all exports are json format. Please also see Additional tool for info.
+## Export
+- The Export options are straightforward. By default, all exports are json format. 
+
+Also refer to the Additional tool (JSON to CSV converter) for more information.
 
 ```
 1. Export environments
@@ -153,6 +157,7 @@ The menu is straightforward with the options. There are 5 choices:
    - This exports all workspaces in your org.
 ```
 
+## Operations
 - The Operations mutates or changes your feature flags/segments/workspaces/environments. More options will be added over time.
 
 ```
@@ -172,11 +177,10 @@ The menu is straightforward with the options. There are 5 choices:
    - This forcefully deletes the feature flag in the workspace you specified, regardless of the definitions. Note that this is not reversible!
 ```
 
-- The Update Cache option
+## Update Cache
 
-```
 It's recommended to run this option after you have made changes to the feature flags or segments to ensure the latest data.
-```
+
 
 ## DEBUG Logging:
 If you run into issues, you can run the script with debug logging enabled for better troubleshooting:
@@ -185,7 +189,7 @@ If you run into issues, you can run the script with debug logging enabled for be
 python admin_api_tool.py --debug
 ```
 
-## Additional tool
+## Additional tool (JSON to CSV converter)
 You can use the provided `convert_json_csv.py` to convert your json files to csv. Simply run
 
 ```
@@ -193,8 +197,7 @@ python convert_json_csv.py
 ```
 In the same directory of your json files.
 
-## Additional notes:
+## Additional notes
 The admin tool does not work properly for workspaces that require approval or have access restrictions.
-
 
 When that happens, you either have to manually do the edit, or you have to make sure the API key you are using has proper access and temporarily disable the approval so the tool can work.
