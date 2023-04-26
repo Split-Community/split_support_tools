@@ -79,16 +79,16 @@ def list_all_segments():
         print(f"keys in this Segment: {segment_data['keys']}")
         print("-------------------------------------------\n")
 
-def list_all_splits():
+def list_all_feature_flags():
     """
-    List all splits with their corresponding ID, name, workspace ID, and workspace name.
+    List all fflags with their corresponding ID, name, workspace ID, and workspace name.
 
     Returns:
         Output to stdout.
     """
     splits = data_utils.get_splits()
     print("")
-    print("List of all splits:")
+    print("List of all feature flags:")
     for split_name, split_data in splits.items():
         for data in split_data:
             print("-------------------------------------------")

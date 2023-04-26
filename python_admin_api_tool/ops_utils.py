@@ -120,9 +120,9 @@ def delete_segments():
             else:
                 print("Deletion cancelled")
 
-def delete_splits():
+def delete_feature_flags():
     """
-    Deletes a selected split from a chosen workspace and updates the cache.
+    Deletes a selected feature flag from a chosen workspace and updates the cache.
 
     Returns: None
     """
@@ -148,7 +148,7 @@ def delete_splits():
 
         while True:
             print("")
-            print("Available splits for the selected workspace:")
+            print("Available feature flags for the selected workspace:")
             print("-------------------------------------------\n")
             splits = [
                 split_name.split(".")[0]
@@ -162,7 +162,7 @@ def delete_splits():
                 print(f"{idx}. {split_name}")
             print("-------------------------------------------\n")
 
-            split_idx_input = input("Select the split to delete from the (0 to go back to the previous menu): ")
+            split_idx_input = input("Select the feature flag to delete from the (0 to go back to the previous menu): ")
             if split_idx_input == "0":
                 break
 
@@ -232,9 +232,9 @@ def delete_environments():
         else:
             print(f"Failed to delete environment '{selected_env_name}'.")
 
-def copy_split_definitions():
+def copy_feature_flag_definitions():
     """
-    Copy definitions from a split to another split
+    Copy definitions from one feature flag to another
 
     Returns: None
     """
@@ -286,13 +286,13 @@ def copy_split_definitions():
                             if split_definition["workspace"] == source_ws_name and split_definition["environment"]["name"] == source_environment_name
                         ]
                         print("")
-                        print("Available splits for the source workspace and environment:")
+                        print("Available feature flags for the source workspace and environment:")
                         print("-------------------------------------------\n")
                         for idx, split_name in enumerate(source_splits, start=1):
                             print(f"{idx}. {split_name}")
                         print("-------------------------------------------\n")
                         # Get source split name
-                        source_split_idx = int(input("Select the source split by entering the corresponding number (0 to go back to the previous menu): ")) - 1
+                        source_split_idx = int(input("Select the source feature flag by entering the corresponding number (0 to go back to the previous menu): ")) - 1
                         if source_split_idx == -1:
                             break
                         source_split_name = source_splits[source_split_idx]
@@ -307,7 +307,7 @@ def copy_split_definitions():
                                 source_split_def = split_definition
                                 break
                         if not source_split_def:
-                            print("Source split definition not found.")
+                            print("Source feature flag definition not found.")
                             break
                         else:
                             print("This is the definition of the chosen Split: ")
@@ -373,16 +373,16 @@ def copy_split_definitions():
                                 while not updated:
                                     if not target_splits:
                                         print("")
-                                        print(f"there is no Split definition for this environment. Before copying please make sure to create a split definition first. \n")
+                                        print(f"there is no feature flag definition for this environment. Before copying please make sure to create a feature flag definition first. \n")
                                         break
                                     print("")
-                                    print("Available splits for the target workspace and environment: \n")
+                                    print("Available feature flag for the target workspace and environment: \n")
                                     print("-------------------------------------------\n")
                                     for idx, split_name in enumerate(target_splits, start=1):
                                         print(f"{idx}. {split_name}")
                                     print("-------------------------------------------\n")
                                     # Get target split name
-                                    target_split_idx = int(input("Select the target split by entering the corresponding number (0 to go back to the previous menu): ")) - 1
+                                    target_split_idx = int(input("Select the target feature flag by entering the corresponding number (0 to go back to the previous menu): ")) - 1
                                     if target_split_idx == -1 or updated:
                                         break
                                     target_split_name = target_splits[target_split_idx]
@@ -392,9 +392,9 @@ def copy_split_definitions():
                                     update_check = target_split_def.update_definition(split_definition)
                                     if update_check:
                                         print("")
-                                        print(f"Copied split definition from Split {source_split_name} in Workspace {source_ws_name}, Environment: {source_environment_name} to Split {target_split_name} in Workspace: {target_ws_name}, Environment: {target_environment_name} \n")
+                                        print(f"Copied definition from feature flag {source_split_name} in Workspace {source_ws_name}, Environment: {source_environment_name} to feature flag {target_split_name} in Workspace: {target_ws_name}, Environment: {target_environment_name} \n")
                                     else:
-                                        print(f"Copying Splits Definition unsuccessful, enable debug logging (--debug) for more info \n")
+                                        print(f"Copying feature flag definition unsuccessful, enable debug logging (--debug) for more info \n")
                                     updated = True
                                     break
     except Exception as e:

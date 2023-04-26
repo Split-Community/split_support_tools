@@ -384,7 +384,7 @@ def get_all_splits_definitions():
 
     total_environments = sum(len(client.environments.list(workspace_id)) for workspace_id in workspaces)
 
-    with tqdm(total=total_environments, desc="Fetching split definitions", ncols=100) as pbar:
+    with tqdm(total=total_environments, desc="Fetching feature flags definitions", ncols=100) as pbar:
         for workspace_id, workspace_name in workspaces.items():
             for env in client.environments.list(workspace_id):
                 split_definitions = get_split_definitions(env.id, workspace_id, workspace_name).values()

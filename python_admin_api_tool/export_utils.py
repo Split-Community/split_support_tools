@@ -9,7 +9,7 @@ def configure_logging(debug=False):
     if debug:
         logger.setLevel(logging.DEBUG)
     else:
-        logger.setLevel(logging.WARNING)
+        logger.setLevel(logging.WARNING)\
 
 def export_treatment_keys_to_csv(treatments, file_name):
     """
@@ -77,9 +77,9 @@ def export_specific_split_definition(split_data):
     workspace_name = split_data["workspace"]
     file_name = f"{split_name}.{environment_name}.{workspace_name}.json"
 
-    print("Exporting split definition, please wait...")
+    print("Exporting feature flag definition, please wait...")
     export_split_definition_to_json(split_data, file_name)
-    print(f"Split definition for {split_name} in environment {environment_name} and workspace {workspace_name} exported successfully!")
+    print(f"Feature flag definition for {split_name} in environment {environment_name} and workspace {workspace_name} exported successfully!")
 
 def export_treatment_keys_to_json(treatments, file_name):
     keys = []
@@ -89,7 +89,7 @@ def export_treatment_keys_to_json(treatments, file_name):
             break
     with open(file_name, "w") as file:
         file.write(json.dumps(keys, indent=4))
-    print(f"Split treatment keys exported successfully!")
+    print(f"Feature Flag's treatment keys exported successfully!")
 
     
 def export_matcher_type_and_strings_to_json(rules, file_name):
@@ -99,7 +99,7 @@ def export_matcher_type_and_strings_to_json(rules, file_name):
             type_and_strings.append({"type": matcher["type"], "strings": matcher["strings"]})
     with open(file_name, "w") as file:
         file.write(json.dumps(type_and_strings, indent=4))
-        print(f"Split treatment rules exported to json successfully!")
+        print(f"Feature Flag's treatment rules exported to json successfully!")
 
 def export_data_to_json(data_type, data_getter):
     data = data_getter()
@@ -123,14 +123,14 @@ def export_data(data_type, data_getter):
     export_data_to_json(data_type, data_getter)
     print(f"{data_type} data exported successfully!")
 
-def export_splits():
+def export_feature_flags():
     """
-    Export all Split data as a JSON file with the name "splits_data.json" to the current working directory.
+    Export all Split data as a JSON file with the name "{}_data.json" to the current working directory.
 
     Returns:
         Output to stdout
     """
-    export_data("splits", data_utils.get_splits)
+    export_data("feature_flags", data_utils.get_splits)
 
 def export_users():
     """
@@ -177,7 +177,7 @@ def export_environments():
     """
     export_data("environments", data_utils.get_environments_data)
 
-def export_split_definitions():
+def export_feature_flags_definitions():
     """
     Export all Split definition data as a JSON file with the name "split_definitions_data.json" to the current working 
     directory.
