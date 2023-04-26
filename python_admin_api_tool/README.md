@@ -9,7 +9,7 @@ With this command-line interface, (CLI), you can:
    - Copy (clone) feature flags and segments
    - Delete groups, segments, and feature flags.
 
-## Setup
+## Setting up
 
 1. If you don’t have Python 3 installed, [install it from here](https://www.python.org/downloads/)
 - Please note that on MacOS, the python command is `python3`
@@ -65,34 +65,40 @@ python3 admin_api_tool.py
 ```
 
 ## Caching
-- To reduce API calls and improve response time, the script caches feature flag definitions and segments definitions on the first run if there is no cache data, other data will be cached on the first use.
+- To reduce API calls and improve response time, the script caches feature flag definitions and segments definitions on the first run if there is no cache data. Other data will be cached on the first use.
 
-- If you make changes to your feature flags, it's recommended that you update the cache using the "Update Cache" option.
+### Note: If you make changes to your feature flags, it's recommended that you update the cache using the Update Cache option.
 
 ## Usage:
-- The menu is straightforward with the options. There are 5 choices: Search, List, Export, Operations, and Update Cache.
+The menu is straightforward with the options. There are 5 choices: 
+- Search
+- List
+- Export
+- Operations
+- Update Cache.
 
+## Search
 - The Search options are:
 
 ```
 1. Search Workspaces Or Groups
-   - This will search for the name of the workspaces or the groups in your org.
+   - This searches for the name of the workspaces or the groups in your org.
 
 2. Search Environments
-   - This will search for all the environments of the same name across all workspaces.
+   - This searches for all the environments of the same name across all workspaces.
 
 3. Search Users
    - Requires the email of the users being searched. Will show information of the user and which group they are in.
 
 4. Search Feature Flags
-   - This will search for all feature flags of the same name across all workspaces and environments.
+   - This searches for all feature flags of the same name across all workspaces and environments.
    - When a feature flag is found, the user can choose to export the following:
       * This feature flag's definition from a specific environment to json
       * The treatment keys to csv/json
       * The list of the targeting rules to csv/json
 
 5. Search Segments
-   - This will search for all segments of the same name across all workspaces and environments, and will also display all the keys of the segments.
+   - This searches for all segments of the same name across all workspaces and environments, and will also display all the keys of the segments.
    - When a segment is found, the user can choose to export the following:
       * The segment keys to csv
 ```
@@ -100,70 +106,70 @@ python3 admin_api_tool.py
 - The List options are self-explanatory. Note that these do not show the full details (such as feature flag definitions or segment keys), please use the Export functions to get the full data.
 
 ```
-1. List All Workspaces
+1. List all workspaces
    - List all workspaces in the org.
 
-2. List All Environments
+2. List all environments
    - List all environments across all workspaces.
 
-3. List All Groups
+3. List all groups
    - List all the groups and the list of users.
 
-4. List All Segments
+4. List all segments
    - List all the segments and keys of each for all environments and workspaces.
 
-5. List All Feature Flags
+5. List all feature flags
    - List all the feature flags across all workspaces, will not show feature flag definitions (use the export option for the definitions).
 
-6. List All Users
+6. List all users
    - List all users and their statuses.
 ```
 
 - Similarly, the Export options are straightforward. By default, all exports are json format. Please also see Additional tool for info.
 
 ```
-1. Export Environments
-   - This will export all environments across all workspaces.
+1. Export environments
+   - This exports all environments across all workspaces.
 
-2. Export Groups
-   - This will export all groups and the users in each group.
+2. Export groups
+   - This exports all groups and the users in each group.
 
-3. Export Segments Definitions
-   - This will export all segments definitions across all workspaces and environments.
+3. Export segments definitions
+   - This exports all segments definitions across all workspaces and environments.
 
-4. Export Segments Keys
-   - This will let the user choose the workspace, environment, the segment, and export all the keys.
+4. Export segments keys
+   - This lets the user choose the workspace, environment, the segment, and export all the keys.
 
-5. Export Feature Flag Definitions
-   - This will export all feature flag definitions across all workspaces and environments.
+5. Export feature flag definitions
+   - This exports all feature flag definitions across all workspaces and environments.
 
-6. Export Feature Flag
-   - This will export all feature flags (not the definitions) across all workspaces and environments.
+6. Export feature flag
+   - This exports all feature flags (not the definitions) across all workspaces and environments.
 
-7. Export Users
-   - This will export all the users and their statuses, as well as group memberships.
+7. Export users
+   - This exports all the users and their statuses, as well as group memberships.
 
-8. Export Workspaces
-   - This will export all workspaces in your org.
+8. Export workspaces
+   - This exports all workspaces in your org.
 ```
 
-- The Operations will mutate or change your feature flags/segments/workspaces/environments. More options will be added over time.
+- The Operations mutates or changes your feature flags/segments/workspaces/environments. More options will be added over time.
 
 ```
-1. Copy Segment Definitions
+1. Copy segment definitions
    - This allows for copying the keys of one segment to another segment. Users can choose from available lists of workspaces, environments, and segments to copy.
 
-2. Copy Feature Flag Definitions
+2. Copy feature flag definitions
    - This allows for copying the definitions of one feature flag to another. Users can choose from available lists of workspaces, environments, and feature flags to copy.
 
-3. Delete Groups
-   - This will forcefully delete the group in the workspace you specified, regardless of the definitions. Note that this is not reversible!
+3. Delete groups
+   - This forcefully deletes the group in the workspace you specified, regardless of the definitions. Note that this is not reversible!
 
-4. Delete Segments
-   - This will forcefully delete the segment in the workspace you specified, regardless of the definitions. Note that this is not reversible!
+4. Delete segments
+   - This forcefully deletes the segment in the workspace you specified, regardless of the definitions. Note that this is not reversible!
 
-5. Delete Feature Flags
-   - This will forcefully delete the feature flag in the workspace you specified, regardless of the definitions. Note that this is not reversible!
+5. Delete feature flags
+   - This forcefully deletes the feature flag in the workspace you specified, regardless of the definitions. Note that this is not reversible!
 ```
 
 - The Update Cache option
@@ -188,7 +194,7 @@ python convert_json_csv.py
 In the same directory of your json files.
 
 ## Additional notes:
-The admin tool will not work properly for workspaces that require approval or have access restrictions.
+The admin tool does not work properly for workspaces that require approval or have access restrictions.
 
 
 When that happens, you either have to manually do the edit, or you have to make sure the API key you are using has proper access and temporarily disable the approval so the tool can work.
