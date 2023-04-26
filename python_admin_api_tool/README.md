@@ -191,4 +191,4 @@ In the same directory of your json files.
 The admin tool will not work properly for workspaces that require approval or have access restrictions.
 
 
-When that happens, you either have to manually do the edit, or you have to make sure the API key you are using has proper access and temporarily disables the approval so the tool can work.
+When that happens, you either have to manually do the edit, or you have to make sure the API key you are using has proper access and temporarily disable the approval so the tool can work.
