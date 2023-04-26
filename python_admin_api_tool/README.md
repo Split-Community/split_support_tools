@@ -88,8 +88,8 @@ python3 admin_api_tool.py
    - This will search for all feature flags of the same name across all workspaces and environments.
    - When a feature flag is found, the user can choose to export the following:
       * This feature flag's definition from a specific environment to json
-      * The treatment keys to csv
-      * The list of the targeting rules csv
+      * The treatment keys to csv/json
+      * The list of the targeting rules to csv/json
 
 5. Search Segments
    - This will search for all segments of the same name across all workspaces and environments, and will also display all the keys of the segments.
