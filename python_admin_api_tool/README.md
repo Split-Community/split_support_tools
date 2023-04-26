@@ -1,8 +1,8 @@
 ## Overview
 
-This is a simple Python tool utilizing Split's [Python PyPi library for Split REST Admin API](https://help.split.io/hc/en-us/articles/4412331052685-Python-PyPi-library-for-Split-REST-Admin-API)
+This Python tool utilizes Split's [Python PyPi library for Split REST Admin API](https://help.split.io/hc/en-us/articles/4412331052685-Python-PyPi-library-for-Split-REST-Admin-API)
 
-With this command-line interface, (CLI), you can:
+With the Python Admin API command-line interface, (CLI), you can:
    - Search for workspaces, environments, groups, users, feature flags, and segments.
    - List all workspaces, environments, groups, users, feature flags, and segments.
    - Export detailed definitions to JSON and optionally convert to CSV
