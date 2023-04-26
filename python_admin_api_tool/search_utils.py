@@ -245,7 +245,7 @@ def get_split_definitions_by_name(split_name):
     
     return definitions
 
-def search_splits():
+def search_feature_flags():
     """
     Searches for a specific Split by name and displays information on its attributes such as its name, ID, 
     workspace, environment, treatments, rules, etc. Optionally, the user can choose to display the 
@@ -257,7 +257,7 @@ def search_splits():
     splits = data_utils.get_splits()
     while True:
         print("-------------------------------------------\n")
-        split_name = input("Enter the split name to search or 1 to go back to previous menu: ")
+        split_name = input("Enter the feature flag name to search or 1 to go back to previous menu: ")
         if split_name == "1":
             menu_utils.search()
             break
@@ -271,9 +271,9 @@ def search_splits():
             workspaces = {definition_data["workspace"] for definition_data in split_definitions[split_name]}
             exported = False
             while not exported:
-                see_split_definitions = input("Do you want to see the split definitions for this split? (yes/no): ")
+                see_split_definitions = input("Do you want to see the definitions for this feature flag? (yes/no): ")
                 if see_split_definitions.lower() == "yes" or see_split_definitions.lower() == "y":
-                    print("Workspaces containing the split:")
+                    print("Workspaces containing the feature flag:")
                     print("-------------------------------------------\n")
                     for index, workspace_name in enumerate(workspaces, 1):
                         print(f"{index}. {workspace_name}")
@@ -283,7 +283,7 @@ def search_splits():
                     chosen_workspace_name = list(workspaces)[chosen_workspace-1]
 
                     environments = {definition_data["environment"]["name"] for definition_data in split_definitions[split_name] if definition_data["workspace"] == chosen_workspace_name}
-                    print("Environments in the chosen workspace containing the split's definitions:")
+                    print("Environments in the chosen workspace containing the feature flag's definitions:")
                     print("-------------------------------------------\n")
                     for index, environment_name in enumerate(environments, 1):
                         print(f"{index}. {environment_name}")
@@ -297,7 +297,7 @@ def search_splits():
                             print(f"Split definition for Split {split_name} in environment {chosen_environment_name} and workspace {chosen_workspace_name}:")
                             pprint.pprint(definition_data)
                             print("-------------------------------------------\n")
-                            export_option = input("Do you want to export this split definition? (yes/no): ")
+                            export_option = input("Do you want to export this feature flag's definition? (yes/no): ")
                             if export_option.lower() == "yes" or export_option.lower() == "y":
                                 export_utils.export_specific_split_definition(definition_data)
 
@@ -325,4 +325,4 @@ def search_splits():
                 else:
                     break
         else:
-            print("Split not found")
+            print("feature flag not found")
