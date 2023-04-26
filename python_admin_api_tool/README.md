@@ -26,7 +26,6 @@ source ~/.zprofile
 ```bash
 git clone git@github.com:Split-Community/split_support_tools.git
 
-
 cd split_support_tools/python_admin_api_tool/
 ```
 
@@ -44,18 +43,17 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-
-6. Make a copy of the example environment variables file
+5. Make a copy of the example environment variables file
 
 ```bash
 cp env_sample .env
 ```
 
-7. Add your [Admin API key](https://help.split.io/hc/en-us/articles/360019916211-API-keys#adding-admin-api-keys) to the newly created `.env` file
+6. Add your [Admin API key](https://help.split.io/hc/en-us/articles/360019916211-API-keys#adding-admin-api-keys) to the newly created `.env` file
 - Note that it's recommended to use an API key that is scoped across all environments and workspaces
 - If the environment/workspace has access restrictions, you might encounter an error.
 
-8. Run the tool
+7. Run the tool
 
 ```bash
 python admin_api_tool.py
