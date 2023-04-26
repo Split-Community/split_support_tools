@@ -5,7 +5,7 @@ This is a simple Python tool utilizing Split's [Python PyPi library for Split RE
 With this command-line interface, (CLI), you can:
    - Search for workspaces, environments, groups, users, feature flags, and segments.
    - List all workspaces, environments, groups, users, feature flags, and segments.
-   - Export fulldetailed detailsdefinitions to JSON and optionally convert to CSV
+   - Export detailed definitions to JSON and optionally convert to CSV
    - Copy (clone) feature flags and segments
    - Delete groups, segments, and feature flags.
 
