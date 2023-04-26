@@ -2,6 +2,13 @@
 
 This is a simple Python tool utilizing Split's [Python PyPi library for Split REST Admin API](https://help.split.io/hc/en-us/articles/4412331052685-Python-PyPi-library-for-Split-REST-Admin-API)
 
+With this command-line interface, (CLI), you can:
+   - Search for workspaces, environments, groups, users, feature flags, and segments.
+   - List all workspaces, environments, groups, users, feature flags, and segments.
+   - Export fulldetailed detailsdefinitions to JSON and optionally convert to CSV
+   - Copy (clone) feature flags and segments
+   - Delete groups, segments, and feature flags.
+
 ## Setup
 
 1. If you don’t have Python 3 installed, [install it from here](https://www.python.org/downloads/)
@@ -45,7 +52,7 @@ cp env_sample .env
 ```
 
 7. Add your [Admin API key](https://help.split.io/hc/en-us/articles/360019916211-API-keys#adding-admin-api-keys) to the newly created `.env` file
-- Note that it's recommend to use an API keys that is scoped across all environments and workspaces
+- Note that it's recommended to use an API key that is scoped across all environments and workspaces
 - If the environment/workspace has access restrictions, you might encounter an error.
 
 8. Run the tool
@@ -60,13 +67,12 @@ python3 admin_api_tool.py
 ```
 
 ## Caching
-- To reduce API calls and improve response time, the script caches split definitions and segments definitions on the first run if there is no cache data, other data will be cached on the first use.
+- To reduce API calls and improve response time, the script caches feature flag definitions and segments definitions on the first run if there is no cache data, other data will be cached on the first use.
 
-
-- If you make changes to your Splits, it's recommended that you update the cache using the "Update Cache" option.
+- If you make changes to your feature flags, it's recommended that you update the cache using the "Update Cache" option.
 
 ## Usage:
-- The menu is straight forward with the options. There are 5 choices: Search, List, Export, Operations, and Update Cache.
+- The menu is straightforward with the options. There are 5 choices: Search, List, Export, Operations, and Update Cache.
 
 - The Search options are:
 
@@ -75,15 +81,15 @@ python3 admin_api_tool.py
    - This will search for the name of the workspaces or the groups in your org.
 
 2. Search Environments
-   - This will search for all the environments of the same name across all workspaces. You will also have the option to see all the splits' definitions under this environment's name.
+   - This will search for all the environments of the same name across all workspaces.
 
 3. Search Users
    - Requires the email of the users being searched. Will show information of the user and which group they are in.
 
-4. Search Splits
-   - This will search for all splits of the same name across all workspaces and environments.
-   - When a split is found, the user can choose to export the following:
-      * This split's definition from a specific environment to json
+4. Search Feature Flags
+   - This will search for all feature flags of the same name across all workspaces and environments.
+   - When a feature flag is found, the user can choose to export the following:
+      * This feature flag's definition from a specific environment to json
       * The treatment keys to csv
       * The list of the targeting rules csv
 
@@ -93,7 +99,7 @@ python3 admin_api_tool.py
       * The segment keys to csv
 ```
 
-- The List options are self-explanatory. Note that these do not show the full details (such as Split's definitions or segment keys), please use the Export functions to get the full data.
+- The List options are self-explanatory. Note that these do not show the full details (such as feature flag definitions or segment keys), please use the Export functions to get the full data.
 
 ```
 1. List All Workspaces
@@ -108,8 +114,8 @@ python3 admin_api_tool.py
 4. List All Segments
    - List all the segments and keys of each for all environments and workspaces.
 
-5. List All Splits
-   - List all the splits across all workspaces, will not show split's definitions (use the export option for the definitions).
+5. List All Feature Flags
+   - List all the feature flags across all workspaces, will not show feature flag definitions (use the export option for the definitions).
 
 6. List All Users
    - List all users and their statuses.
@@ -130,11 +136,11 @@ python3 admin_api_tool.py
 4. Export Segments Keys
    - This will let the user choose the workspace, environment, the segment, and export all the keys.
 
-5. Export Split Definitions
-   - This will export all Splits definitions across all workspaces and environments.
+5. Export Feature Flag Definitions
+   - This will export all feature flag definitions across all workspaces and environments.
 
-6. Export Splits
-   - This will export all Splits (not the definitions) across all workspaces and environments.
+6. Export Feature Flag
+   - This will export all feature flags (not the definitions) across all workspaces and environments.
 
 7. Export Users
    - This will export all the users and their statuses, as well as group memberships.
@@ -143,14 +149,14 @@ python3 admin_api_tool.py
    - This will export all workspaces in your org.
 ```
 
-- The Operations are options that will mutate or change your splits/segments/workspaces/environments. More options will be added over time.
+- The Operations will mutate or change your feature flags/segments/workspaces/environments. More options will be added over time.
 
 ```
 1. Copy Segment Definitions
    - This allows for copying the keys of one segment to another segment. Users can choose from available lists of workspaces, environments, and segments to copy.
 
-2. Copy Split Definitions
-   - This allows for copying the definitions of one split to another split. Users can choose from available lists of workspaces, environments, and splits to copy.
+2. Copy Feature Flag Definitions
+   - This allows for copying the definitions of one feature flag to another. Users can choose from available lists of workspaces, environments, and feature flags to copy.
 
 3. Delete Groups
    - This will forcefully delete the group in the workspace you specified, regardless of the definitions. Note that this is not reversible!
@@ -158,14 +164,14 @@ python3 admin_api_tool.py
 4. Delete Segments
    - This will forcefully delete the segment in the workspace you specified, regardless of the definitions. Note that this is not reversible!
 
-5. Delete Splits
-   - This will forcefully delete the Split in the workspace you specified, regardless of the definitions. Note that this is not reversible!
+5. Delete Feature Flags
+   - This will forcefully delete the feature flag in the workspace you specified, regardless of the definitions. Note that this is not reversible!
 ```
 
 - The Update Cache option
 
 ```
-It's recommended to run this option after you have made changes to the splits to ensure the latest data.
+It's recommended to run this option after you have made changes to the feature flags or segments to ensure the latest data.
 ```
 
 ## DEBUG Logging:
