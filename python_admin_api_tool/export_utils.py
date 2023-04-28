@@ -47,18 +47,6 @@ def export_treatment_keys_to_csv(treatments, file_name):
         print(f"Keys are empty, no export")
         return
 
-def export_matcher_type_and_strings_to_json_bk2(rules, file_name):
-    type_and_strings = []
-    for rule in rules:
-        for matcher in rule["condition"]["matchers"]:
-            if "strings" in matcher:
-                type_and_strings.append({"type": matcher["type"], "strings": matcher["strings"]})
-            elif "string" in matcher:
-                type_and_strings.append({"type": matcher["type"], "strings": [matcher["string"]]})
-    with open(file_name, "w") as file:
-        file.write(json.dumps(type_and_strings, indent=4))
-        print(f"Feature Flag's treatment rules exported to json successfully!")
-
 def export_matcher_type_and_strings_to_json_bk(rules, file_name):
     if not rules:
         print("Rules are empty, no export.")
