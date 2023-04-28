@@ -9,7 +9,21 @@ def configure_logging(debug=False):
     if debug:
         logger.setLevel(logging.DEBUG)
     else:
-        logger.setLevel(logging.WARNING)\
+        logger.setLevel(logging.WARNING)
+
+def export_treatment_keys_to_json(treatments, file_name):
+    keys = []
+    for treatment in treatments:
+        if "keys" in treatment and treatment["keys"]:
+            keys = [key for key in treatment["keys"]]
+            break
+    if keys:
+        with open(file_name, "w") as file:
+            file.write(json.dumps(keys, indent=4))
+        print(f"Feature Flag's treatment keys exported successfully!")
+    else:
+        print(f"Keys are empty, no export")
+        return
 
 def export_treatment_keys_to_csv(treatments, file_name):
     """
@@ -22,13 +36,67 @@ def export_treatment_keys_to_csv(treatments, file_name):
         if "keys" in treatment and treatment["keys"]:
             keys = [key for key in treatment["keys"]]
             break
+    if keys:
+        with open(file_name, 'w', newline='') as file:
+            writer = csv.writer(file)
+            writer.writerow(["keys"])
+            for key in keys:
+                writer.writerow([key])
+        print(f"Split treatment rules exported to csv successfully!")
+    else:
+        print(f"Keys are empty, no export")
+        return
 
-    with open(file_name, 'w', newline='') as file:
-        writer = csv.writer(file)
-        writer.writerow(["keys"])
-        for key in keys:
-            writer.writerow([key])
-    print(f"Split treatment rules exported to csv successfully!")
+def export_matcher_type_and_strings_to_json_bk2(rules, file_name):
+    type_and_strings = []
+    for rule in rules:
+        for matcher in rule["condition"]["matchers"]:
+            if "strings" in matcher:
+                type_and_strings.append({"type": matcher["type"], "strings": matcher["strings"]})
+            elif "string" in matcher:
+                type_and_strings.append({"type": matcher["type"], "strings": [matcher["string"]]})
+    with open(file_name, "w") as file:
+        file.write(json.dumps(type_and_strings, indent=4))
+        print(f"Feature Flag's treatment rules exported to json successfully!")
+
+def export_matcher_type_and_strings_to_json_bk(rules, file_name):
+    if not rules:
+        print("Rules are empty, no export.")
+        return
+    type_and_strings = []
+    for rule in rules:
+        for matcher in rule["condition"]["matchers"]:
+            if "strings" in matcher:
+                type_and_strings.append({"type": matcher["type"], "strings": matcher["strings"]})
+            elif "string" in matcher:
+                type_and_strings.append({"type": matcher["type"], "strings": [matcher["string"]]})
+    with open(file_name, "w") as file:
+        file.write(json.dumps(type_and_strings, indent=4))
+        print(f"Feature Flag's treatment rules exported to json successfully!")
+
+def export_matcher_type_and_strings_to_json(rules, file_name):
+    if not rules:
+        print("Rules are empty, no export.")
+        return
+    type_and_strings = []
+    for rule in rules:
+        for matcher in rule["condition"]["matchers"]:
+            matcher_info = {"type": matcher["type"]}
+            if "strings" in matcher:
+                matcher_info["strings"] = matcher["strings"]
+            elif "string" in matcher:
+                matcher_info["strings"] = [matcher["string"]]
+            elif "set" in matcher:
+                matcher_info["set"] = [matcher["set"]]
+            elif "depends" in matcher:
+                matcher_info["depends"] = matcher["depends"]
+            # Add other matcher types here
+            type_and_strings.append(matcher_info)
+
+    with open(file_name, "w") as file:
+        file.write(json.dumps(type_and_strings, indent=4))
+        print(f"Feature Flag's treatment rules exported to json successfully!")
+
 
 def export_matcher_type_and_strings_to_csv(rules, file_name):
     """
@@ -37,13 +105,26 @@ def export_matcher_type_and_strings_to_csv(rules, file_name):
     Returns:
         None
     """
+    if not rules:
+        print("Rules are empty, no export.")
+        return
     type_and_strings = []
     for rule in rules:
+        if "condition" not in rule:
+            continue
         for matcher in rule["condition"]["matchers"]:
-            type_and_strings.append({"type": matcher["type"], "strings": matcher["strings"]})
-    
+            matcher_info = {"type": matcher["type"]}
+            if "strings" in matcher:
+                matcher_info["strings"] = matcher["strings"]
+            elif "string" in matcher:
+                matcher_info["strings"] = [matcher["string"]]
+            elif "depends" in matcher:
+                matcher_info["depends"] = matcher["depends"]
+            # Add other matcher types here
+            type_and_strings.append(matcher_info)
+
     # Find the max number of rows
-    max_rows = max([len(strings) for type_and_string in type_and_strings for strings in type_and_string["strings"]])
+    max_rows = max([len(strings) for type_and_string in type_and_strings if "strings" in type_and_string for strings in type_and_string["strings"]])
 
     with open(file_name, "w", newline='') as file:
         csv_writer = csv.writer(file)
@@ -53,8 +134,11 @@ def export_matcher_type_and_strings_to_csv(rules, file_name):
         for row_idx in range(max_rows):
             row = []
             for type_and_string in type_and_strings:
-                strings = type_and_string["strings"]
-                row.append(strings[row_idx] if row_idx < len(strings) else '')
+                if "strings" in type_and_string:
+                    strings = type_and_string["strings"]
+                    row.append(strings[row_idx] if row_idx < len(strings) else '')
+                else:
+                    row.append('')
             csv_writer.writerow(row)
     print(f"Split treatment rules exported to csv successfully!")
 
@@ -81,25 +165,6 @@ def export_specific_split_definition(split_data):
     export_split_definition_to_json(split_data, file_name)
     print(f"Feature flag definition for {split_name} in environment {environment_name} and workspace {workspace_name} exported successfully!")
 
-def export_treatment_keys_to_json(treatments, file_name):
-    keys = []
-    for treatment in treatments:
-        if "keys" in treatment and treatment["keys"]:
-            keys = [key for key in treatment["keys"]]
-            break
-    with open(file_name, "w") as file:
-        file.write(json.dumps(keys, indent=4))
-    print(f"Feature Flag's treatment keys exported successfully!")
-
-    
-def export_matcher_type_and_strings_to_json(rules, file_name):
-    type_and_strings = []
-    for rule in rules:
-        for matcher in rule["condition"]["matchers"]:
-            type_and_strings.append({"type": matcher["type"], "strings": matcher["strings"]})
-    with open(file_name, "w") as file:
-        file.write(json.dumps(type_and_strings, indent=4))
-        print(f"Feature Flag's treatment rules exported to json successfully!")
 
 def export_data_to_json(data_type, data_getter):
     data = data_getter()
