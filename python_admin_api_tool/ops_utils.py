@@ -363,6 +363,7 @@ def copy_feature_flag_definitions():
                                 "defaultTreatment": source_split_def["defaultTreatment"],
                                 "rules": source_split_def["rules"],
                                 "defaultRule": source_split_def["defaultRule"],
+                                "baselineTreatment" : source_split_def["baselineTreatment"],
                                 "trafficAllocation" : source_split_def["trafficAllocation"]
                                 }
                                 target_splits = [
