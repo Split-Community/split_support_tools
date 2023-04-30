@@ -358,7 +358,8 @@ def copy_feature_flag_definitions():
                                 target_environment_name = target_env_data["name"]
                             # Create a new split definition dictionary with only the necessary keys
                                 split_definition = {
-                                "treatments": list(source_split_def["treatments"]),
+                                #"treatments": list(source_split_def["treatments"]),
+                                "treatments": source_split_def["treatments"],
                                 "defaultTreatment": source_split_def["defaultTreatment"],
                                 "rules": source_split_def["rules"],
                                 "defaultRule": source_split_def["defaultRule"],
@@ -387,7 +388,7 @@ def copy_feature_flag_definitions():
                                         break
                                     target_split_name = target_splits[target_split_idx]
                                     #dest_workspace = client.workspaces.find(target_ws_name)
-
+                                    print(f"this is the split definitions {split_definition}")
                                     target_split_def = client.split_definitions.find(target_split_name, target_env_id, target_ws_id)
                                     update_check = target_split_def.update_definition(split_definition)
                                     if update_check:
