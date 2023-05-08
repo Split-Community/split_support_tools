@@ -314,6 +314,10 @@ def get_splits():
     if cache.cache_data["splits"]:
         return cache.cache_data["splits"]
     else:
+        # Create a dictionary mapping user IDs to user names
+        users = get_all_users()
+        user_id_to_data = {user_data["ID"]: user_data for user_data in users.values()}
+
         workspaces = get_workspaces()
         splits = {}
         for workspace_id, workspace_name in tqdm(workspaces.items(), desc="Fetching splits", ncols=100, leave=False):
@@ -322,7 +326,16 @@ def get_splits():
                 split_data["rolloutStatus"] = split._rolloutStatus
                 split_data["trafficType"] = split._trafficType.to_dict()
                 split_data["tags"] = split._tags
-                split_data["owners"] = split._owners
+                # Add user names to the 'owners' structure
+                split_data["owners"] = [
+                    {
+                        "id": owner["id"],
+                        "type": owner["type"],
+                        "name": user_id_to_data[owner["id"]]["Name"] if owner["type"] == "user" and owner["id"] in user_id_to_data else None,
+                        "email": user_id_to_data[owner["id"]]["Email"] if owner["type"] == "user" and owner["id"] in user_id_to_data else None
+                    }
+                    for owner in split._owners
+                ]
                 split_data["workspace_id"] = workspace_id
                 split_data["workspace_name"] = workspace_name
                 if split.name not in splits:
