@@ -238,4 +238,4 @@ def export_feature_flags_definitions():
     Returns:
         Output to stdout
     """
-    export_data("split_definitions", data_utils.get_all_splits_definitions)
+    export_data("flag_definitions", data_utils.get_all_splits_definitions)
