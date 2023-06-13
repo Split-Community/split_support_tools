@@ -624,7 +624,7 @@ def export_segments_keys():
                         #export_keys_option = input("Do you want to export keys under this segment? (yes/no): ")
                         #if export_keys_option.lower() == "yes" or export_keys_option.lower() == "y":
                         file_name = f"segment-{source_segment_name}.{source_environment_name}.{source_ws_name}"
-                        segDef = client.segment_definitions.find(segment_name, source_env_id, source_ws_id)
+                        segDef = client.segment_definitions.find(source_segment_name, source_env_id, source_ws_id)
                         segDef.export_keys_to_csv(f"{file_name}_keys.csv")
                         print(f"keys are exported to {file_name}_keys.csv")
                         updated = True
