@@ -6,6 +6,9 @@ import subprocess
 from dotenv import load_dotenv
 from splitapiclient.main import get_client
 
+# Set up logging
+logging.basicConfig(level=logging.DEBUG)
+
 load_dotenv()
 # Load API key from .env file
 API_KEY = os.environ.get("ADMIN_API_KEY")
