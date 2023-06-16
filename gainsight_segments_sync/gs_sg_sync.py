@@ -14,6 +14,8 @@ logging.basicConfig(level=logging.DEBUG)
 load_dotenv()
 # Load API key from .env file
 API_KEY = os.environ.get("ADMIN_API_KEY")
+APPROVER_KEY = os.environ.get("APPROVER_API_KEY")
+
 # Initialize the client connection
 client = get_client({'apikey': API_KEY})
 
@@ -46,6 +48,29 @@ environment_id = client.environments.find(environment, workspace_id).id
 # List of CSV files to process
 csv_files = ['early_adopter_users', 'early_adopter_accounts', 'holdout_users', 'holdout_accounts']
 
+def segments_sync_bk():
+    # Remove all CSV files in current directory
+    remove_csv_files('.')
+    # Download files from S3 bucket
+    download_from_s3('split-prod-gainsight', '.')
+    for file in csv_files:
+        csv_file = f'{file}.csv'
+        if os.path.exists(csv_file):
+            keys = process_csv(csv_file)
+            segDef = client.segment_definitions.find(file, environment_id, workspace_id)
+
+            # Get existing keys from the segment
+            #existing_keys = segDef.get_keys()
+            #print(existing_keys)
+            # Remove existing keys
+            #open_change_request_id = submit_change_request(workspace_id, environment_id, file, existing_keys)
+            #approve_change_request(open_change_request_id)
+
+            segDef.import_keys_from_json("true", {"keys": keys, "comment": "a comment"})
+            print(segDef.get_keys())
+        else:
+            print(f"CSV file {csv_file} does not exist. Skipping segment {file}.")
+
 def segments_sync():
     # Remove all CSV files in current directory
     #remove_csv_files('.')
@@ -61,13 +86,13 @@ def segments_sync():
             existing_keys = segDef.get_keys()
             print(existing_keys)
             # Remove existing keys
-            open_change_request_id = submit_change_request(workspace_id, environment_id, file, existing_keys)
-            print(open_change_request_id)
-            #open_change_request_id="3e483da0-0bd7-11ee-bf86-520c73833e8f"
+            #open_change_request_id = submit_change_request(workspace_id, environment_id, file, existing_keys)
             #approve_change_request(open_change_request_id)
 
-            #segDef.import_keys_from_json("true", {"keys": keys, "comment": "a comment"})
-            #print(segDef.get_keys())
+            # Submit a change request to add new keys
+            add_members_request_id = submit_add_members_change_request(workspace_id, environment_id, file, keys)
+            # Approve the change request to add new keys
+            approve_change_request(add_members_request_id)
         else:
             print(f"CSV file {csv_file} does not exist. Skipping segment {file}.")
 
@@ -83,7 +108,7 @@ def submit_change_request(workspace_id, environment_id, segment_name, keys):
         "operationType": "ARCHIVE",
         "title": "Some CR Title",
         "comment": "Some CR Comment",
-        "approvers": ["tin.tran+1@split.io", "AdminAPI"]
+        "approvers": []
     }
     response = requests.post(url, headers=headers, data=json.dumps(data))
     response_data = response.json()
@@ -92,12 +117,33 @@ def submit_change_request(workspace_id, environment_id, segment_name, keys):
     print(f"Request_Id: {open_change_request_id}")
     return open_change_request_id
 
+def submit_add_members_change_request(workspace_id, environment_id, segment_name, keys):
+    url = f'https://api.split.io/internal/api/v2/changeRequests/ws/{workspace_id}/environments/{environment_id}'
+    headers = {
+        'Content-Type': 'application/json',
+        'Authorization': f'Bearer {API_KEY}'
+    }
+    data = {
+        "segment": {"name": segment_name, "keys": keys},
+        "operationType": "CREATE",
+        "title": "Some CR Title",
+        "comment": "Some CR Comment",
+        "approvers": []
+    }
+    response = requests.post(url, headers=headers, json=data)
+    response_data = response.json()
+    print(response_data)
+    open_change_request_id = response_data['id']
+    print(f"Request_Id: {open_change_request_id}")
+    return open_change_request_id
+
+
 
 def approve_change_request(change_request_id):
     url = f'https://api.split.io/internal/api/v2/changeRequests/{change_request_id}'
     headers = {
         'Content-Type': 'application/json',
-        'Authorization': f'Bearer {API_KEY}'
+        'Authorization': f'Bearer {APPROVER_KEY}'
     }
     data = {
         "status": "APPROVED",
@@ -105,6 +151,7 @@ def approve_change_request(change_request_id):
     }
     requests.put(url, headers=headers, data=json.dumps(data))
 
+#segments_sync_bk()
 segments_sync()
-print(workspace_id)
+
 
