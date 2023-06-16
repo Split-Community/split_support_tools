@@ -3,6 +3,8 @@ import glob
 import logging
 import csv
 import subprocess
+import requests
+import json
 from dotenv import load_dotenv
 from splitapiclient.main import get_client
 
@@ -46,18 +48,63 @@ csv_files = ['early_adopter_users', 'early_adopter_accounts', 'holdout_users', '
 
 def segments_sync():
     # Remove all CSV files in current directory
-    remove_csv_files('.')
+    #remove_csv_files('.')
     # Download files from S3 bucket
-    download_from_s3('split-prod-gainsight', '.')
+    #download_from_s3('split-prod-gainsight', '.')
     for file in csv_files:
         csv_file = f'{file}.csv'
         if os.path.exists(csv_file):
             keys = process_csv(csv_file)
-            #print(keys)
             segDef = client.segment_definitions.find(file, environment_id, workspace_id)
-            segDef.import_keys_from_json("true", {"keys": keys, "comment": "a comment"})
-            #print (segDef.get_keys())
+
+            # Get existing keys from the segment
+            existing_keys = segDef.get_keys()
+            print(existing_keys)
+            # Remove existing keys
+            open_change_request_id = submit_change_request(workspace_id, environment_id, file, existing_keys)
+            print(open_change_request_id)
+            #open_change_request_id="3e483da0-0bd7-11ee-bf86-520c73833e8f"
+            #approve_change_request(open_change_request_id)
+
+            #segDef.import_keys_from_json("true", {"keys": keys, "comment": "a comment"})
+            #print(segDef.get_keys())
         else:
             print(f"CSV file {csv_file} does not exist. Skipping segment {file}.")
 
+
+def submit_change_request(workspace_id, environment_id, segment_name, keys):
+    url = f'https://api.split.io/internal/api/v2/changeRequests/ws/{workspace_id}/environments/{environment_id}'
+    headers = {
+        'Content-Type': 'application/json',
+        'Authorization': f'Bearer {API_KEY}'
+    }
+    data = {
+        "segment": {"name": segment_name, "keys": keys},
+        "operationType": "ARCHIVE",
+        "title": "Some CR Title",
+        "comment": "Some CR Comment",
+        "approvers": ["tin.tran+1@split.io", "AdminAPI"]
+    }
+    response = requests.post(url, headers=headers, data=json.dumps(data))
+    response_data = response.json()
+    print(response_data)
+    open_change_request_id = response_data['id']
+    print(f"Request_Id: {open_change_request_id}")
+    return open_change_request_id
+
+
+def approve_change_request(change_request_id):
+    url = f'https://api.split.io/internal/api/v2/changeRequests/{change_request_id}'
+    headers = {
+        'Content-Type': 'application/json',
+        'Authorization': f'Bearer {API_KEY}'
+    }
+    data = {
+        "status": "APPROVED",
+        "comment": "withdrawing from Admin API"
+    }
+    requests.put(url, headers=headers, data=json.dumps(data))
+
 segments_sync()
+print(workspace_id)
+
