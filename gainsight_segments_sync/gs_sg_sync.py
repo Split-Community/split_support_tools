@@ -101,7 +101,7 @@ def submit_change_request(workspace_id, environment_id, segment_name, keys):
         "operationType": "ARCHIVE",
         "title": "Some CR Title",
         "comment": "Some CR Comment",
-        "approvers": ["tin.tran+1@split.io"]
+        "approvers": ["tin.tran+1@split.io", "tran.hbq@gmail.com"]
     }
     response = requests.post(url, headers=headers, data=json.dumps(data))
     response_data = response.json()
@@ -121,7 +121,7 @@ def submit_add_members_change_request(workspace_id, environment_id, segment_name
         "operationType": "CREATE",
         "title": "Some CR Title",
         "comment": "Some CR Comment",
-        "approvers": ["tin.tran+1@split.io"]
+        "approvers": ["tin.tran+1@split.io", "tran.hbq@gmail.com"]
     }
     response = requests.post(url, headers=headers, json=data)
     response_data = response.json()
