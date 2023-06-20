@@ -51,9 +51,9 @@ csv_files = ['early_adopter_users', 'early_adopter_accounts', 'holdout_users', '
 
 def segments_sync():
     # Remove all CSV files in current directory
-    #remove_csv_files('.')
+    remove_csv_files('.')
     # Download files from S3 bucket
-    #download_from_s3('split-prod-gainsight', '.')
+    download_from_s3('split-prod-gainsight', '.')
     for file in csv_files:
         csv_file = f'{file}.csv'
         if os.path.exists(csv_file):
