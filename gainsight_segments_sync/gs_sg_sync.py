@@ -10,7 +10,13 @@ from dotenv import load_dotenv
 from splitapiclient.main import get_client
 
 # Set up logging
-logging.basicConfig(level=logging.DEBUG)
+#logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
+
 
 load_dotenv()
 # Load API key from .env file
