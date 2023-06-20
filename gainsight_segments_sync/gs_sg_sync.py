@@ -20,6 +20,13 @@ APPROVER_KEY = os.environ.get("APPROVER_API_KEY")
 # Initialize the client connection
 client = get_client({'apikey': API_KEY})
 
+workspace = "Default"
+environment = "Prod-Default"
+workspace_id = client.workspaces.find(workspace).id
+environment_id = client.environments.find(environment, workspace_id).id
+# List of CSV files to process
+csv_files = ['early_adopter_users', 'early_adopter_accounts', 'holdout_users', 'holdout_accounts']
+
 def remove_csv_files(directory):
     """
     Remove all CSV files from a directory.
@@ -42,12 +49,7 @@ def process_csv(file_name):
         keys = [row[0] for row in reader]
     return keys
 
-workspace = "Default"
-environment = "Prod-Default"
-workspace_id = client.workspaces.find(workspace).id
-environment_id = client.environments.find(environment, workspace_id).id
-# List of CSV files to process
-csv_files = ['early_adopter_users', 'early_adopter_accounts', 'holdout_users', 'holdout_accounts']
+
 
 def segments_sync():
     # Remove all CSV files in current directory
