@@ -26,9 +26,10 @@ APPROVER_KEY = os.environ.get("APPROVER_API_KEY")
 # Initialize the client connection
 client = get_client({'apikey': API_KEY})
 
-workspace = "Default"
+#workspace = "Split App"
 environment = "Production"
-workspace_id = client.workspaces.find(workspace).id
+#workspace_id = client.workspaces.find(workspace).id
+workspace_id = "caa89340-fe34-11e8-ae9f-069aee18f4aa"
 environment_id = client.environments.find(environment, workspace_id).id
 # List of CSV files to process
 csv_files = ['early_adopter_accounts', 'early_adopter_users', 'holdout_accounts', 'holdout_users']
@@ -105,7 +106,7 @@ def submit_remove_segment_keys_change_request(workspace_id, environment_id, segm
         "operationType": "ARCHIVE",
         "title": "Some CR Title",
         "comment": "Some CR Comment",
-        "approvers": ["tin.tran+1@split.io", "tran.hbq@gmail.com"]
+        "approvers": ["tin.tran@split.io"]
     }
     response = requests.post(url, headers=headers, data=json.dumps(data))
     response_data = response.json()
@@ -125,7 +126,7 @@ def submit_add_members_change_request(workspace_id, environment_id, segment_name
         "operationType": "CREATE",
         "title": "Some CR Title",
         "comment": "Some CR Comment",
-        "approvers": ["tin.tran+1@split.io", "tran.hbq@gmail.com"]
+        "approvers": ["tin.tran@split.io"]
     }
     response = requests.post(url, headers=headers, json=data)
     response_data = response.json()
