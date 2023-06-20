@@ -74,7 +74,7 @@ def segments_sync():
             existing_keys = segDef.get_keys()
             print(existing_keys)
             # Remove existing keys
-            open_change_request_id = submit_change_request(workspace_id, environment_id, file, existing_keys)
+            open_change_request_id = submit_remove_segment_keys_change_request(workspace_id, environment_id, file, existing_keys)
             #approve_change_request(open_change_request_id)
             remove_status = wait_for_approval(open_change_request_id)
             # Submit a change request to add new keys
@@ -98,7 +98,7 @@ def wait_for_approval(change_request_id):
             time.sleep(5)  # Sleep for 5 minutes (300 seconds)
     return True
 
-def submit_change_request(workspace_id, environment_id, segment_name, keys):
+def submit_remove_segment_keys_change_request(workspace_id, environment_id, segment_name, keys):
     url = f'https://api.split.io/internal/api/v2/changeRequests/ws/{workspace_id}/environments/{environment_id}'
     headers = {
         'Content-Type': 'application/json',
