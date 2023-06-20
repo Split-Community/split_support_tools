@@ -1,5 +1,5 @@
-.env
-.pkl
-.json
-.csv
+*.env
+*.pkl
+*.json
+*.csv
 __pycache__
