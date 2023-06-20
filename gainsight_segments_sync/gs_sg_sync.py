@@ -18,8 +18,6 @@ logging.basicConfig(
     datefmt='%Y-%m-%d %H:%M:%S'
 )
 
-
-
 load_dotenv()
 # Load API key from .env file
 API_KEY = os.environ.get("ADMIN_API_KEY")
@@ -29,11 +27,11 @@ APPROVER_KEY = os.environ.get("APPROVER_API_KEY")
 client = get_client({'apikey': API_KEY})
 
 workspace = "Default"
-environment = "Prod-Default"
+environment = "Production"
 workspace_id = client.workspaces.find(workspace).id
 environment_id = client.environments.find(environment, workspace_id).id
 # List of CSV files to process
-csv_files = ['early_adopter_users', 'early_adopter_accounts', 'holdout_users', 'holdout_accounts']
+csv_files = ['early_adopter_accounts', 'early_adopter_users', 'holdout_accounts', 'holdout_users']
 
 def remove_csv_files(directory):
     """
@@ -56,8 +54,6 @@ def process_csv(file_name):
         next(reader)  # Skip the header
         keys = [row[0] for row in reader]
     return keys
-
-
 
 def segments_sync():
     # Remove all CSV files in current directory
