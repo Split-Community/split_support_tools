@@ -33,7 +33,7 @@ workspace_id = "caa89340-fe34-11e8-ae9f-069aee18f4aa"
 environment_id = client.environments.find(environment, workspace_id).id
 # List of CSV files to process
 csv_files = ['early_adopter_accounts', 'early_adopter_users', 'holdout_accounts', 'holdout_users']
-
+approvers = ["tin.tran@split.io"]
 def remove_csv_files(directory):
     """
     Remove all CSV files from a directory.
@@ -106,7 +106,7 @@ def submit_remove_segment_keys_change_request(workspace_id, environment_id, segm
         "operationType": "ARCHIVE",
         "title": "Some CR Title",
         "comment": "Some CR Comment",
-        "approvers": ["tin.tran@split.io"]
+        "approvers": approvers
     }
     response = requests.post(url, headers=headers, data=json.dumps(data))
     response_data = response.json()
@@ -126,7 +126,7 @@ def submit_add_members_change_request(workspace_id, environment_id, segment_name
         "operationType": "CREATE",
         "title": "Some CR Title",
         "comment": "Some CR Comment",
-        "approvers": ["tin.tran@split.io"]
+        "approvers": approvers
     }
     response = requests.post(url, headers=headers, json=data)
     response_data = response.json()
