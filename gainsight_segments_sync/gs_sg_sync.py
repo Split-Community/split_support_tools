@@ -75,7 +75,7 @@ def segments_sync():
             #approve_change_request(open_change_request_id)
             remove_status = wait_for_approval(open_change_request_id)
             # Submit a change request to add new keys
-            if remove_status:
+            if remove_status and if keys:
                 add_members_request_id = submit_add_members_change_request(workspace_id, environment_id, file, keys)
             # Approve the change request to add new keys
             # approve_change_request(add_members_request_id)
