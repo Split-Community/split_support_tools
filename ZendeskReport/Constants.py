@@ -5,7 +5,7 @@
 #
 
 class Constants:
-    APITOKEN = "PNP3zYMPFgjxCrULLkjDRwkSBVezT8y2zmQteaxd"
+    APITOKEN = "d"
     LOGPATH = "/mnt/d/Dev/code/python/split/ZendeskReportzd.log"
-    USEREMAIL = "tin.tran@split.io"
-    SUBDOMAIN = "splitsoftware"
+    USEREMAIL = ""
+    SUBDOMAIN = ""
